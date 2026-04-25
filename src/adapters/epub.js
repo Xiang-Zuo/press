@@ -59,7 +59,7 @@ import { fetchAssets } from '../assets/fetch.js'
  */
 export async function compileEpub(input, options = {}) {
     const { sections = [], metadata = null } = input || {}
-    const { meta = {}, stylesheet, identifier, cover } = options
+    const { meta = {}, stylesheet, identifier, cover, loadAsset } = options
 
     const resolvedMeta = { ...(metadata || {}), ...meta }
     const css = stylesheet || DEFAULT_STYLESHEET
@@ -74,13 +74,17 @@ export async function compileEpub(input, options = {}) {
     // Deduplicate image URLs across all chapters — and the cover, if any —
     // and fetch them in parallel. Failed fetches are logged and the original
     // URL is left in place; the EPUB still opens but may show broken images.
+    // The host-supplied `loadAsset` (when present) is tried before fetch —
+    // browser hosts wrap fetch; Node hosts (unipress) wrap node:fs so config-
+    // level paths like `assets/cover.jpg` resolve to bytes via the manifest
+    // the framework's content collector populated.
     const imageUrls = new Set()
     for (const ch of chapters) {
         for (const url of ch.images) imageUrls.add(url)
     }
     if (coverUrl) imageUrls.add(coverUrl)
     const fetched = imageUrls.size
-        ? await fetchAssets(imageUrls)
+        ? await fetchAssets(imageUrls, { loadAsset })
         : new Map()
 
     // Assign a manifest-relative path to every successfully-fetched image,

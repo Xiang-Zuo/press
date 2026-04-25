@@ -129,8 +129,13 @@ export async function buildDocument(input, options = {}) {
     if (footer) collectFootnotes(footer, footnotesState)
 
     // Flatten all blocks' IR trees into one array of section children.
-    // Use async conversion for image support.
-    const children = await convertChildren(sections.flat())
+    // Use async conversion for image support. The host-supplied loadAsset
+    // (when present) is threaded down to irToImageParagraph → fetchImageData
+    // → fetchAsset, so config-level paths like `assets/diagram.png` resolve
+    // to bytes via the framework's content-collector manifest the same way
+    // the typst path does.
+    const { loadAsset } = options
+    const children = await convertChildren(sections.flat(), loadAsset)
 
     const sectionOptions = {
         properties: {
@@ -144,7 +149,7 @@ export async function buildDocument(input, options = {}) {
     }
 
     if (header) {
-        const headerChildren = await convertChildren(header)
+        const headerChildren = await convertChildren(header, loadAsset)
         const headerObj = new Header({ children: headerChildren })
         const defaultHeaderObj = createDefaultHeaderFooter(true)
 
@@ -160,7 +165,7 @@ export async function buildDocument(input, options = {}) {
     }
 
     if (footer) {
-        const footerChildren = await convertChildren(footer)
+        const footerChildren = await convertChildren(footer, loadAsset)
         const footerObj = new Footer({ children: footerChildren })
         const defaultFooterObj = createDefaultHeaderFooter(false)
 
@@ -280,10 +285,14 @@ export function createDefaultHeaderFooter(isHeader) {
 
 /**
  * Convert an array of IR nodes to section children, handling async
- * image fetches via Promise.all.
+ * image fetches via Promise.all. `loadAsset` (when provided) is forwarded
+ * to image-emitting paths so host-supplied byte loaders take precedence
+ * over the URL-based fetch fallback.
  */
-async function convertChildren(nodes) {
-    const results = await Promise.all(nodes.map(irToSectionChildrenAsync))
+async function convertChildren(nodes, loadAsset) {
+    const results = await Promise.all(
+        nodes.map((node) => irToSectionChildrenAsync(node, loadAsset)),
+    )
     return results.flat()
 }
 
@@ -294,12 +303,12 @@ async function convertChildren(nodes) {
 /**
  * Convert an IR node into section-level docx children (async for images).
  */
-async function irToSectionChildrenAsync(node) {
+async function irToSectionChildrenAsync(node, loadAsset) {
     switch (node.type) {
         case 'table':
             return [await irToTableAsync(node)]
         case 'image':
-            return [await irToImageParagraph(node)]
+            return [await irToImageParagraph(node, loadAsset)]
         case 'tableOfContents':
             return [irToTableOfContents(node)]
         case 'webOnly':
@@ -804,12 +813,12 @@ function inferImageType(src, data) {
  * valid type). Do not simplify the altText spread — `name: ''` looks
  * like a no-op but Word-for-Mac rejects the file without it.
  */
-async function irToImageParagraph(node) {
+async function irToImageParagraph(node, loadAsset) {
     try {
         const src = node.src || ''
         if (!src) return new DocxParagraph({})
 
-        const imageData = await fetchImageData(src)
+        const imageData = await fetchImageData(src, loadAsset)
 
         const width = toInt(node.transformation?.width) ?? 400
         const height = toInt(node.transformation?.height) ?? 300
@@ -847,7 +856,7 @@ async function irToImageParagraph(node) {
  * adapter use; see principle 6 ("Extract shared logic when a second
  * adapter needs it") in docs/architecture/principles.md.
  */
-async function fetchImageData(url) {
-    const { bytes } = await fetchAsset(url)
+async function fetchImageData(url, loadAsset) {
+    const { bytes } = await fetchAsset(url, { loadAsset })
     return bytes
 }

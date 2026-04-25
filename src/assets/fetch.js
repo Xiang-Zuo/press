@@ -22,16 +22,47 @@
 /**
  * Fetch a single asset URL and return normalized bytes + metadata.
  *
+ * Resolution order:
+ *   1. `options.loadAsset(url)` — host-supplied byte loader. Browser hosts
+ *      typically wrap `fetch`; Node hosts (unipress) wrap `node:fs`. When
+ *      present, tried first; on throw or null/undefined return, falls
+ *      through to `fetch`. This is how foundations stay environment-
+ *      agnostic — they declare `book.covers.front: assets/front.jpg` and
+ *      the host's loadAsset turns that into bytes the same way the host
+ *      handles every other config-level asset.
+ *   2. `fetch()` (or `options.fetch` for tests) — the legacy URL-based
+ *      path. Required for absolute http(s) URLs and as a fallback for
+ *      anything `loadAsset` can't handle.
+ *
  * @param {string} url
  * @param {Object} [options]
+ * @param {(src: string) => Promise<Uint8Array | null>} [options.loadAsset]
+ *   - host-supplied byte loader. See above.
  * @param {typeof fetch} [options.fetch] - override for tests / node-fetch.
  * @returns {Promise<{ bytes: Uint8Array, mime: string, hash: string, ext: string }>}
  */
 export async function fetchAsset(url, options = {}) {
+    const { loadAsset } = options
+
+    if (typeof loadAsset === 'function') {
+        try {
+            const bytes = await loadAsset(url)
+            if (bytes && bytes.length > 0) {
+                const mime = detectMime(url, bytes)
+                const ext = extForMime(mime) || extFromUrl(url) || 'bin'
+                const hash = await hashContent(bytes)
+                return { bytes, mime, hash, ext }
+            }
+        } catch {
+            // Fall through to fetch — loadAsset may not handle every URL
+            // shape (e.g., absolute http(s) URLs in a Node host).
+        }
+    }
+
     const fetchImpl = options.fetch || globalThis.fetch
     if (typeof fetchImpl !== 'function') {
         throw new Error(
-            'fetchAsset: no fetch() available. Pass options.fetch or run in an environment that provides globalThis.fetch.',
+            'fetchAsset: no fetch() available. Pass options.fetch / options.loadAsset or run in an environment that provides globalThis.fetch.',
         )
     }
     const res = await fetchImpl(url)
