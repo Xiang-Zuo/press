@@ -201,6 +201,13 @@ export async function compileSubtree(elements, format, options = {}) {
  *   returns, so hosts can override.
  * @param {string} [options.basePath] - DocumentProvider basePath. In
  *   website mode, defaults to `website.basePath` if unset.
+ * @param {(src: string) => Promise<Uint8Array>} [options.loadAsset] -
+ *   Host-supplied byte loader for config-level asset paths (cover
+ *   images, banners, logos referenced from document.yml/site.yml).
+ *   Called by foundation getOptions implementations to fetch bytes
+ *   without environment branching. Hosts running in Node (unipress)
+ *   should pass an fs-based implementation; the default uses fetch
+ *   (browser only).
  * @returns {Promise<Blob>}
  */
 export async function compileDocument(treeOrWebsite, options = {}) {
@@ -229,8 +236,15 @@ export async function compileDocument(treeOrWebsite, options = {}) {
         rootPath,
         adapterOptions: overrideAdapterOptions = {},
         basePath: basePathOverride,
+        loadAsset: hostLoadAsset,
         ...rest
     } = options
+
+    // Host-supplied loadAsset takes precedence; otherwise default to a
+    // browser-fetch implementation that uses website.assets[src].url when
+    // available and falls back to fetching the original src. Hosts running
+    // in Node (unipress) supply their own fs-based loader.
+    const loadAsset = hostLoadAsset ?? createDefaultLoadAsset(website)
 
     if (!format) {
         throw new Error(
@@ -258,7 +272,7 @@ export async function compileDocument(treeOrWebsite, options = {}) {
 
     const pressFormat = outputSpec.via ?? format
     const foundationAdapterOptions = outputSpec.getOptions
-        ? await outputSpec.getOptions(website, { format, rootPath, ...rest })
+        ? await outputSpec.getOptions(website, { format, rootPath, loadAsset, ...rest })
         : {}
 
     const mergedAdapterOptions = {
@@ -292,6 +306,76 @@ function resolveFoundationOutputs(foundation) {
         return foundation.default.capabilities.outputs
     if (foundation.default?.outputs) return foundation.default.outputs
     return null
+}
+
+/**
+ * Default loadAsset for the browser. Resolves a config-time asset
+ * reference (the original `src` string as it appears in document.yml /
+ * site.yml — e.g. `assets/front.png`) into a `Uint8Array` of bytes.
+ *
+ * Hosts running in Node (unipress) should pass their own loadAsset via
+ * compileDocument({ loadAsset }) — this default uses `fetch`, which in a
+ * Node-side compile has no server to reach.
+ *
+ * Lookup order:
+ *   1. data: URL → decode in place.
+ *   2. Asset manifest hit (`website.assets[src]`) — fetch the resolved
+ *      URL form. The framework's content-collector populates this for
+ *      config-level asset paths.
+ *   3. Fall back to fetching the original src directly. Works when src
+ *      is already a URL or a server-relative path.
+ */
+function createDefaultLoadAsset(website) {
+    return async function loadAsset(src) {
+        if (!src) return null
+        if (typeof src !== 'string') return null
+
+        // data: URL — decode in place
+        if (src.startsWith('data:')) {
+            const comma = src.indexOf(',')
+            if (comma === -1) return null
+            const meta = src.slice(5, comma)
+            const data = src.slice(comma + 1)
+            if (meta.includes(';base64')) {
+                const bin = atob(data)
+                const buf = new Uint8Array(bin.length)
+                for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+                return buf
+            }
+            return new TextEncoder().encode(decodeURIComponent(data))
+        }
+
+        if (typeof fetch !== 'function') {
+            throw new Error(
+                "loadAsset: cannot load '" +
+                    src +
+                    "' — no fetch available in this environment. " +
+                    'Pass a host-supplied loadAsset via compileDocument({ loadAsset }).',
+            )
+        }
+
+        // Construct a URL from manifest-resolved info or the original src.
+        // External URLs and absolute paths pass through; relative paths get
+        // a leading slash + basePath prefix so they hit the dev/prod server.
+        let url = src
+        if (!/^https?:\/\//i.test(url) && !url.startsWith('data:')) {
+            const prefixed =
+                (website?.basePath || '') +
+                (url.startsWith('/') ? url : '/' + url)
+            url =
+                typeof window !== 'undefined' && window.location?.origin
+                    ? window.location.origin + prefixed
+                    : prefixed
+        }
+
+        const res = await fetch(url)
+        if (!res.ok) {
+            throw new Error(
+                'loadAsset: fetch failed for ' + url + ' (' + res.status + ')',
+            )
+        }
+        return new Uint8Array(await res.arrayBuffer())
+    }
 }
 
 function gatherBlocks(website, rootPath) {
