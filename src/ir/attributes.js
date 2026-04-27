@@ -136,6 +136,42 @@ export const attributeMap = {
     // merge-continue rows internally.
     'data-row-span': { path: ['rowSpan'], transform: toInt },
 
+    // ------------------------------------------------------------------
+    // Stage 3 — paragraph polish
+    // ------------------------------------------------------------------
+
+    // Paragraph indentation. All values are twips. `firstLine` and
+    // `hanging` are positive; `left` and `right` may be negative.
+    'data-indent-left': { path: ['indent', 'left'], transform: toInt },
+    'data-indent-right': { path: ['indent', 'right'], transform: toInt },
+    'data-indent-firstline': { path: ['indent', 'firstLine'], transform: toInt },
+    'data-indent-hanging': { path: ['indent', 'hanging'], transform: toInt },
+
+    // Paragraph tab stops. JSON-encoded array of TabStopDefinition objects:
+    //   [{ position: 6804, type: 'right', leader: 'dot' }, …]
+    // Position is in twips; type is left/right/center/decimal/etc;
+    // leader is none/dot/hyphen/underscore/middleDot. Foundations
+    // typically construct these via the <Paragraph tabStops=…> prop
+    // and the unit helpers (cm, mm, inch, pt).
+    'data-tab-stops': {
+        path: ['tabStops'],
+        transform: (v) => {
+            if (typeof v !== 'string') return v
+            try {
+                const parsed = JSON.parse(v)
+                return Array.isArray(parsed) ? parsed : v
+            } catch {
+                return v
+            }
+        },
+    },
+
+    // TextRun toggles — explicit map entries route the lower-case
+    // HTML attribute names to camelCase IR fields the adapter reads.
+    'data-smallcaps': { path: ['smallCaps'], transform: asTrue },
+    'data-allcaps': { path: ['allCaps'], transform: asTrue },
+    'data-strike': { path: ['strike'], transform: asTrue },
+
     // Row-level: whether the row repeats as a header on each new page
     // when the table breaks. Presence-only — any truthy value counts.
     'data-row-header': { path: ['tableHeader'], transform: asTrue },

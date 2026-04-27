@@ -68,9 +68,15 @@ describe('attributeMap', () => {
         // Stage 2 of press-professional-docx (cell merging):
         //   + 1 data-grid-span (column span)
         //   + 1 data-row-span  (row span)
-        //   = 73 total.
+        //   = 73.
+        //
+        // Stage 3 of press-professional-docx (paragraph polish):
+        //   + 4 data-indent-{left,right,firstline,hanging}
+        //   + 1 data-tab-stops (JSON-encoded array)
+        //   + 3 data-{smallcaps,allcaps,strike}
+        //   = 81 total.
         const keys = Object.keys(attributeMap)
-        expect(keys).toHaveLength(73)
+        expect(keys).toHaveLength(81)
     })
 
     it('does not contain data-type', () => {

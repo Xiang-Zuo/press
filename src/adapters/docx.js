@@ -26,6 +26,9 @@ import {
     TableLayoutType,
     VerticalAlign,
     ShadingType,
+    Tab as DocxTab,
+    TabStopType,
+    LeaderType,
     ExternalHyperlink,
     InternalHyperlink,
     ImageRun,
@@ -391,6 +394,21 @@ function irToParagraph(node) {
         const instance = toInt(node.numbering.instance)
         if (instance != null) options.numbering.instance = instance
     }
+    if (node.indent) {
+        const indent = {}
+        for (const key of ['left', 'right', 'start', 'end', 'firstLine', 'hanging']) {
+            const v = node.indent[key]
+            if (v == null) continue
+            const n = typeof v === 'string' ? parseInt(v, 10) : v
+            if (Number.isFinite(n)) indent[key] = n
+        }
+        if (Object.keys(indent).length) options.indent = indent
+    }
+    if (Array.isArray(node.tabStops) && node.tabStops.length) {
+        options.tabStops = node.tabStops
+            .map(toTabStopDefinition)
+            .filter(Boolean)
+    }
 
     const children = (node.children || []).flatMap(irToInlineChildren)
 
@@ -419,6 +437,11 @@ function irToInlineChildren(node) {
     switch (node.type) {
         case 'text':
             return irToTextRunPair(node)
+        case 'tab':
+            // Stage 3: <Tab/> inline builder. Emits a docx Tab element
+            // that interacts with the paragraph's tabStops. Wrapped in
+            // a TextRun so the OOXML parent is <w:r>.
+            return [new TextRun({ children: [new DocxTab()] })]
         case 'externalHyperlink':
             return [irToExternalHyperlink(node)]
         case 'internalHyperlink':
@@ -504,6 +527,10 @@ function irToTextRunPair(node) {
         if (Number.isFinite(sz)) options.size = sz
     }
     if (node.font) options.font = node.font
+    // Stage 3: smallCaps / allCaps / strike — boolean run formatting.
+    if (node.smallCaps === 'true' || node.smallCaps === true) options.smallCaps = true
+    if (node.allCaps === 'true' || node.allCaps === true) options.allCaps = true
+    if (node.strike === 'true' || node.strike === true) options.strike = true
 
     result.push(new TextRun(options))
     return result
@@ -780,6 +807,51 @@ const VERTICAL_ALIGNS = {
 
 function toVerticalAlign(v) {
     return VERTICAL_ALIGNS[v] ?? VerticalAlign.TOP
+}
+
+// --- Tab stops ---
+
+const TAB_STOP_TYPES = {
+    left: TabStopType.LEFT,
+    right: TabStopType.RIGHT,
+    center: TabStopType.CENTER,
+    decimal: TabStopType.DECIMAL,
+    bar: TabStopType.BAR,
+    clear: TabStopType.CLEAR,
+    end: TabStopType.END,
+    num: TabStopType.NUM,
+    start: TabStopType.START,
+}
+
+const TAB_STOP_LEADERS = {
+    none: LeaderType.NONE,
+    dot: LeaderType.DOT,
+    hyphen: LeaderType.HYPHEN,
+    underscore: LeaderType.UNDERSCORE,
+    middleDot: LeaderType.MIDDLE_DOT,
+}
+
+/**
+ * Build a docx TabStopDefinition from an IR tab-stop entry.
+ *
+ * Foundations write `tabStops={[{position: cm(12), type: 'right', leader: 'dot'}]}`
+ * on a Paragraph. The builder JSON-stringifies the array; the IR
+ * transform parses it back here we coerce strings to docx enums.
+ *
+ * @returns {{type: string, position: number, leader?: string} | null}
+ */
+function toTabStopDefinition(stop) {
+    if (!stop || typeof stop !== 'object') return null
+    const type = TAB_STOP_TYPES[stop.type] ?? TabStopType.LEFT
+    const positionRaw =
+        typeof stop.position === 'string' ? parseInt(stop.position, 10) : stop.position
+    if (!Number.isFinite(positionRaw)) return null
+    const def = { type, position: positionRaw }
+    if (stop.leader) {
+        const leader = TAB_STOP_LEADERS[stop.leader]
+        if (leader) def.leader = leader
+    }
+    return def
 }
 
 // --- Positional tab ---

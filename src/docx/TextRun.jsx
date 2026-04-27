@@ -25,6 +25,9 @@ export default function TextRun({
     color,
     size,
     font,
+    smallCaps,
+    allCaps,
+    strike,
     style,
     ...props
 }) {
@@ -35,6 +38,9 @@ export default function TextRun({
     if (color) dataProps['data-color'] = color
     if (size != null) dataProps['data-size'] = size
     if (font) dataProps['data-font'] = font
+    if (smallCaps) dataProps['data-smallcaps'] = 'true'
+    if (allCaps) dataProps['data-allcaps'] = 'true'
+    if (strike) dataProps['data-strike'] = 'true'
     if (style) dataProps['data-style'] = style
 
     return (
