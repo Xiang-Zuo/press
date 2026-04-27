@@ -7,6 +7,7 @@
         ".": "./src/index.js",
         "./docx": "./src/docx/index.js",
         "./typst": "./src/typst/index.js",
+        "./latex": "./src/latex/index.js",
         "./sections": "./src/sections/index.js",
         "./ir": "./src/ir/index.js",
         "./vite-plugin-typst": "./src/vite-plugin-typst.js"

@@ -40,7 +40,12 @@ function renderElement(element, key) {
     switch (element.type) {
         case 'heading':
             return (
-                <Heading key={key} level={element.level || 1} data={element.text || ''} />
+                <Heading
+                    key={key}
+                    level={element.level || 1}
+                    id={element.attrs?.id || undefined}
+                    data={element.text || ''}
+                />
             )
 
         case 'paragraph':
@@ -83,6 +88,7 @@ function renderElement(element, key) {
                     alt={element.attrs?.alt}
                     caption={element.attrs?.caption}
                     width={element.attrs?.width}
+                    id={element.attrs?.id || undefined}
                 />
             )
 

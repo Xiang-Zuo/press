@@ -8,15 +8,16 @@
 import { parseStyledString } from '../docx/parseStyledString.js'
 import TextRun from './TextRun.jsx'
 
-export default function Heading({ level = 1, data, children, ...props }) {
+export default function Heading({ level = 1, id, data, children, ...props }) {
     const clamped = Math.min(Math.max(level, 1), 6)
     const Tag = `h${clamped}`
+    const idAttr = id ? { 'data-id': id } : {}
 
     if (data) {
         const parts = parseStyledString(data)
 
         return (
-            <Tag data-type="heading" data-level={clamped} {...props}>
+            <Tag data-type="heading" data-level={clamped} {...idAttr} {...props}>
                 {parts.map((part, i) =>
                     part.type === 'link' ? (
                         <a
@@ -44,7 +45,7 @@ export default function Heading({ level = 1, data, children, ...props }) {
     }
 
     return (
-        <Tag data-type="heading" data-level={clamped} {...props}>
+        <Tag data-type="heading" data-level={clamped} {...idAttr} {...props}>
             {children}
         </Tag>
     )

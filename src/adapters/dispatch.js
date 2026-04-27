@@ -40,6 +40,11 @@ const ADAPTERS = {
     docx: { load: () => import('./docx.js'), consumes: 'docx', ir: true },
     xlsx: { load: () => import('./xlsx.js'), consumes: 'xlsx', ir: false },
     typst: { load: () => import('./typst.js'), consumes: 'typst', ir: true },
+    // LaTeX consumes its own input key. Foundations targeting both Typst
+    // and LaTeX register under each format separately — same JSX, two
+    // useDocumentOutput calls — so the adapters can diverge as the
+    // formats need without forcing a shared input shape.
+    latex: { load: () => import('./latex.js'), consumes: 'latex', ir: true },
     // Paged.js consumes 'html' — an input shape shared with EPUB below.
     // Foundations register once under 'html' and both adapters read it.
     pagedjs: { load: () => import('./pagedjs.js'), consumes: 'html', ir: false },
@@ -79,6 +84,7 @@ export async function runCompile(format, compiledInput, documentOptions = {}) {
         adapter.compileDocx ||
         adapter.compileXlsx ||
         adapter.compileTypst ||
+        adapter.compileLatex ||
         adapter.compilePagedjs ||
         adapter.compileEpub ||
         adapter.compilePdf
