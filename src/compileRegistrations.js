@@ -56,13 +56,13 @@ import { runCompile, getAdapterDescriptor } from './adapters/dispatch.js'
  *   const blob = await compileTypst(compiled, { mode: 'sources', ... })
  */
 export function compileRegistrations(elements, format, options = {}) {
-    const { basePath } = options
+    const { basePath, theme } = options
     const store = createStore()
 
     renderToStaticMarkup(
         createElement(
             DocumentProvider,
-            { store, basePath },
+            { store, basePath, theme },
             elements,
         ),
     )
@@ -138,8 +138,8 @@ function warnIfEmptyRegistrations(store, format) {
  *   triggerDownload(blob, 'book.zip')
  */
 export async function compileSubtree(elements, format, options = {}) {
-    const { basePath, adapterOptions = {} } = options
-    const compiled = compileRegistrations(elements, format, { basePath })
+    const { basePath, theme, adapterOptions = {} } = options
+    const compiled = compileRegistrations(elements, format, { basePath, theme })
     return runCompile(format, compiled, adapterOptions)
 }
 
