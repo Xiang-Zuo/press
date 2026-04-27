@@ -11,7 +11,11 @@ Read the relevant doc for the task before touching code. Do not rely on memory; 
 - **`docs/architecture/adding-a-format.md`** — worked examples and checklist for writing a new adapter. Replaces the old ad-hoc procedural notes that used to live here.
 - **`docs/architecture/deployment.md`** — wire protocol, reference implementations, font story for formats that need a backend. Rarely needed unless working on server-mode code.
 - **`docs/architecture/format-roadmap.md`** — what's shipped, what's next. Check before proposing format work to make sure the plan isn't already resolved.
+- **`docs/architecture/word-styles-decision.md`** — why typography routes through OOXML named styles instead of inline formatting. Consult before changing anything in the Stage 6 typography surface.
 - **`docs/concepts.md`** — user-facing mental model. Useful when writing guides or examples.
+- **`docs/guides/docx-foundation-cookbook.md`** — task-oriented walkthrough for foundation authors. The single best document to point a colleague at when they're building a docx-producing foundation. If you're answering a foundation-author question, the answer is probably already in here — quote and link rather than re-deriving.
+- **`docs/api/docx.md`, `format.md`, `typography-roles.md`** — per-subpath API references.
+- **`docs/ai-prompt.md`** — self-contained prompt for asking an LLM for Press JSX. Useful when pair-programming with Claude / Cursor.
 - **`README.md`** — public pitch, hello-world, pointers. Useful for checking how Press is currently presented externally.
 
 Cross-reference for legacy vocabulary: `kb/framework/reference/documents-legacy-references.md` carries the ~30 `data-*` attributes inherited verbatim from `@uniwebcms/report-sdk`. Do not redesign the vocabulary without good reason — foundation porting from the legacy SDK depends on exact names.

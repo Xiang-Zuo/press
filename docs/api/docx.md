@@ -280,9 +280,93 @@ await compile('docx', {
 })
 ```
 
+## Stage 6 builders — typography, page chrome, brand
+
+The builders below were added in Stage 6 of the press-professional-docx work. Each gets its own dedicated reference; this section is a pointer with the one-line summary so the API barrel reads cleanly.
+
+### `<Paragraph role="…">` and `<TextRun role="…">`
+
+Reference an OOXML named style by role name. At compile time the role resolves to a Word style (`<w:pStyle>` / `<w:rStyle>`) the recipient can edit from Word's Styles pane. Built-in roles: `Title`, `Heading1`-`Heading3`, `Body`, `Display`, `BodyStrong`, `Label`, `Caption`, `TableHeader`, `TotalLine`. Foundations extend the registry per institution.
+
+```jsx
+<Paragraph role="Title"><TextRun>Annual Activity Report</TextRun></Paragraph>
+<TextRun role="Label">DEPARTMENT</TextRun>
+<TextRun role="Display">42</TextRun>
+```
+
+Full reference: **[Typography roles](./typography-roles.md)**.
+
+### `<PageHeader>`, `<PageFooter>`, `<PageNumber/>`, `<TotalPages/>`
+
+Page chrome builders. `<PageHeader>` and `<PageFooter>` are layout-transparent — they're React fragments that signal intent. The actual routing happens via the role tag in `useDocumentOutput`'s options:
+
+```jsx
+useDocumentOutput(block, 'docx', <PageHeader>{logo}</PageHeader>, { role: 'header' })
+useDocumentOutput(block, 'docx', <PageFooter>{footerJsx}</PageFooter>, { role: 'footer' })
+```
+
+`<PageNumber/>` and `<TotalPages/>` emit Word field codes (`PAGE` / `NUMPAGES`) that Word evaluates on print/preview.
+
+For different-first-page chrome, register the first-page variant with `applyTo: 'first'`.
+
+### `<BrandLogo>`
+
+A right-aligned brand image with sensible defaults for placing a logo in a page header or cover block:
+
+```jsx
+<BrandLogo url={institution.logo} width={cm(4)} align="right" />
+```
+
+Emits a bare `<img data-type="image" data-alignment="…">` (NOT wrapped in a Paragraph — see the cookbook's "Images dropped from the output" section for why). The adapter wraps in a paragraph with the right alignment when emitting the ImageRun.
+
+### `pageSizes` presets
+
+Common paper sizes in twips, ready to spread into `pageSize`:
+
+```js
+pageSizes.A4      // { width: 11906, height: 16838 } — 21.0 × 29.7 cm
+pageSizes.A5      // 14.8 × 21.0 cm
+pageSizes.A3      // 29.7 × 42.0 cm
+pageSizes.LETTER  // 8.5 × 11 in
+pageSizes.LEGAL   // 8.5 × 14 in
+pageSizes.TABLOID // 11 × 17 in
+```
+
+### Unit helpers
+
+```js
+cm(2)   // → twips for 2 cm
+mm(20)  // → twips for 20 mm
+inch(1) // → twips for 1 inch
+pt(11)  // → twips for 11 pt
+```
+
+Use these in `columnWidths`, `pageMargin`, `tabStops`, and anywhere docx expects twips.
+
+### Paragraph polish props (`tabStops`, `indent`, `<Tab/>`)
+
+```jsx
+<Paragraph
+    tabStops={[
+        { position: cm(8), type: 'center' },
+        { position: cm(16), type: 'right', leader: 'dot' },
+    ]}
+    indent={{ left: cm(2), firstLine: cm(1), hanging: cm(0.5) }}
+>
+    Left text<Tab/>centered<Tab/>right text
+</Paragraph>
+```
+
+`<Tab/>` is the JSX-friendly alternative to writing `{'\t'}` literally (which React's whitespace handling can swallow). The paragraph's tab stops align text on each tab.
+
 ## See also
 
+- **[docx cookbook](../guides/docx-foundation-cookbook.md)** — task-oriented walkthrough for foundation authors building real documents.
+- **[/format reference](./format.md)** — date / range / currency builders.
+- **[Typography roles reference](./typography-roles.md)** — the role catalog, OOXML routing, override mechanisms.
+- **[Architecture: Word styles decision](../architecture/word-styles-decision.md)** — why typography routes through OOXML named styles instead of inline formatting.
 - **[/sections reference](./sections.md)** — `Section` and `StandardSection` remove the register-and-render boilerplate around these builders.
 - **[/ir reference](./ir.md)** — the `attributeMap` that defines which `data-*` attributes the IR walker recognizes.
 - **[Multi-block reports guide](../guides/multi-block-reports.md)** — how multiple sections compose into one document.
 - **[Concepts](../concepts.md)** — why builders use `data-*` attributes instead of a typed React prop surface.
+- **[AI prompt](../ai-prompt.md)** — self-contained prompt for asking Claude / another LLM for Press JSX.

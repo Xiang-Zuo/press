@@ -266,6 +266,14 @@ See each API reference (linked from the [README](../README.md)) for details.
 - **Template-engine / placeholder resolution.** Section components assume the content they receive is already fully resolved. Dynamic values like `{family_name}` or `{SHOW grants.amount SORTED BY year DESCENDING}` are handled upstream — typically by a Uniweb foundation's content handler, powered by [`@uniweb/loom`](https://github.com/uniweb/loom). Press stays format-focused.
 - **Citation formatting.** Bibliographies need structured output (`{ text, html, parts }`) that depend on author count, date presence, container type, etc. That's not a template problem. Foundations that need citations import `@citestyle/*` directly and use it at the component level — see the [citations guide](./guides/citations.md).
 - **Data fetching.** Uniweb has `EntityStore` and block-level fetch configs for that. Press consumes whatever `content.data` the runtime has already resolved.
-- **A `theme.yml`-equivalent for documents.** Cross-foundation document theme configuration is interesting future work but deliberately not in Press's scope. Foundations control their own typography via the `data-*` attributes on Press builders.
+- **A `theme.yml`-equivalent for documents.** Cross-foundation document theme configuration is interesting future work but deliberately not in Press's scope. Foundations control their own typography via the `data-*` attributes on Press builders, or — when they want recipients to be able to restyle from Word's Styles pane — the [typography role registry](./api/typography-roles.md).
 
 These omissions are how Press keeps its surface small — a registration layer, a compile pipeline, a download utility, and a shipped docx toolkit for convenience. Everything else is either upstream of Press (in the Uniweb runtime) or layered on top of it (at the foundation level).
+
+## Where to go next
+
+- **[docx cookbook](./guides/docx-foundation-cookbook.md)** — task-oriented walkthrough for foundation authors building real Word documents (annual reports, faculty CVs, business documents).
+- **[Quick start](./quick-start.md)** — ten minutes from `npm install` to a working Download button.
+- **[API references](./api/)** — `docx`, `format`, `typography-roles`, `sections`, `ir`.
+- **[Architecture](./architecture/)** — design rationale, including the [Word styles decision](./architecture/word-styles-decision.md).
+- **[AI prompt](./ai-prompt.md)** — paste this into Claude before asking for Press JSX, so the model has the right scaffolding.
