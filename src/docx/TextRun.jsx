@@ -5,6 +5,37 @@ import {
 } from '../ThemeContext.js'
 
 /**
+ * Stage 6.1 safety net. If a Date object reaches a TextRun as a
+ * child, coerce it to ISO YYYY-MM-DD before React's default
+ * stringification produces "Sat Feb 28 2026 19:00:00 GMT-0500 …".
+ *
+ * The right way to render a date is via `<DateText value={…} format="…"/>`
+ * from @uniweb/press/format, which gives the foundation control over
+ * locale and format. This safety net is the floor: a careless
+ * `<TextRun>{date}</TextRun>` produces a readable date instead of a
+ * garbage timezone string — and avoids the React 19 "Objects are not
+ * valid as a React child (found: Invalid Date)" runtime error.
+ *
+ * Walks one level of direct children. We can't use React.Children.map
+ * here because it rejects Date objects upfront (only plain objects
+ * are special-cased; Date counts as "object").
+ */
+function coerceDate(child) {
+    if (!(child instanceof Date)) return child
+    if (Number.isNaN(child.getTime())) return ''
+    const y = child.getUTCFullYear()
+    const m = String(child.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(child.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+}
+
+function coerceDateChildren(children) {
+    if (children == null) return children
+    if (Array.isArray(children)) return children.map(coerceDate)
+    return coerceDate(children)
+}
+
+/**
  * Inline text span. Renders <span data-type="text"> with optional
  * bold/italic/underline + color/size/font via data attributes.
  *
@@ -61,7 +92,7 @@ export default function TextRun({
 
     return (
         <span {...dataProps} {...props}>
-            {children}
+            {coerceDateChildren(children)}
         </span>
     )
 }

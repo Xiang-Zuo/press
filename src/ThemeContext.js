@@ -56,6 +56,19 @@ export const DEFAULT_THEME = {
         mono: 'Consolas',
     },
     /**
+     * Default locale for date / currency formatting. Foundations
+     * override per-document via `website.config.business_docs.theme.locale`.
+     * Builders that read the theme (`<DateText>`, `<DateRangeText>`,
+     * `<Currency>`) fall back to this value when no explicit `locale`
+     * prop is given. Format strings follow the BCP-47 convention.
+     */
+    locale: 'en-CA',
+    /**
+     * Default ISO 4217 currency code for `<Currency>` when no explicit
+     * `code` is set on the builder.
+     */
+    currency: 'CAD',
+    /**
      * Typography roles. Each entry is a small `{ font, size, bold,
      * italics, color, smallCaps, allCaps, strike, paragraph }` shape;
      * `font` and `color` may be theme keys ('body', 'heading', 'accent',

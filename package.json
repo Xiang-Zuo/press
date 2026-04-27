@@ -9,6 +9,7 @@
         "./typst": "./src/typst/index.js",
         "./latex": "./src/latex/index.js",
         "./sections": "./src/sections/index.js",
+        "./format": "./src/format/index.jsx",
         "./ir": "./src/ir/index.js",
         "./vite-plugin-typst": "./src/vite-plugin-typst.js"
     },
