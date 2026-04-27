@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect } from 'vitest'
-import { compileInvoice, verifyDocx, readDocxParts } from './_harness.js'
+import { compileInvoice, verifyDocx, readDocxParts } from './_harness.jsx'
 import { Stage4Body, stage4Options } from './stage-4-chrome.jsx'
 
 describe('stage 4: chrome fixture', () => {

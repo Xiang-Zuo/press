@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect } from 'vitest'
-import { compileInvoice, verifyDocx } from './_harness.js'
+import { compileInvoice, verifyDocx } from './_harness.jsx'
 import { Stage2Invoice } from './stage-2-spans.jsx'
 
 describe('stage 2: spans fixture', () => {

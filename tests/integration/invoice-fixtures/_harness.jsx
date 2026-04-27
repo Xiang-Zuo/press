@@ -21,11 +21,13 @@
  * The harness is `.js` (not `.test.js`) so vitest doesn't pick it up
  * directly — fixtures import from it.
  */
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { Packer } from 'docx'
 import JSZip from 'jszip'
 import { htmlToIR } from '../../../src/ir/parser.js'
 import { buildDocument } from '../../../src/adapters/docx.js'
+import DocumentProvider from '../../../src/DocumentProvider.jsx'
 
 /**
  * Compile a JSX fragment all the way to a docx buffer.
@@ -53,19 +55,29 @@ export async function compileInvoice(jsx, options = {}) {
         footer,
         headerFirstPageOnly = false,
         footerFirstPageOnly = false,
+        theme,
         ...documentOptions
     } = options
 
-    const html = renderToStaticMarkup(jsx)
-    const sectionIr = htmlToIR(html)
+    // When the caller passes a theme, every render goes through a
+    // DocumentProvider so theme-aware builders (TextRun color, Td
+    // shading, table borders) can resolve theme keys. Without a theme,
+    // builders fall back to DEFAULT_THEME and emit literal hex values
+    // — preserving the pre-Stage-5 behavior for older fixtures.
+    const renderHtml = (node) =>
+        renderToStaticMarkup(
+            theme ? <DocumentProvider theme={theme}>{node}</DocumentProvider> : node,
+        )
+
+    const sectionIr = htmlToIR(renderHtml(jsx))
 
     const input = { sections: [sectionIr] }
     if (header) {
-        input.header = htmlToIR(renderToStaticMarkup(header))
+        input.header = htmlToIR(renderHtml(header))
         input.headerFirstPageOnly = headerFirstPageOnly
     }
     if (footer) {
-        input.footer = htmlToIR(renderToStaticMarkup(footer))
+        input.footer = htmlToIR(renderHtml(footer))
         input.footerFirstPageOnly = footerFirstPageOnly
     }
 

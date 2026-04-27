@@ -14,7 +14,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { Paragraph, Tab, TextRun, cm } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 3: paragraph tab stops', () => {
     it('emits <w:tabs>/<w:tab> in paragraph properties', async () => {

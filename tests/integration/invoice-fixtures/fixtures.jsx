@@ -15,6 +15,7 @@ import { BaselineInvoice } from './stage-0-baseline.jsx'
 import { Stage1Invoice } from './stage-1-tables.jsx'
 import { Stage2Invoice } from './stage-2-spans.jsx'
 import { Stage4Body, stage4Options } from './stage-4-chrome.jsx'
+import { Stage5Body, stage5Options } from './stage-5-themed.jsx'
 
 export const FIXTURES = [
     {
@@ -42,5 +43,12 @@ export const FIXTURES = [
             'Adds page header (brand wordmark), tabbed footer with Page X of Y, A4 setup',
         render: () => <Stage4Body />,
         options: stage4Options(),
+    },
+    {
+        name: 'stage-5-themed',
+        description:
+            'Same look as Stage 4 but every brand color flows through the theme channel',
+        render: () => <Stage5Body />,
+        options: stage5Options(),
     },
 ]

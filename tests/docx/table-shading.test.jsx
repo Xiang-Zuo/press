@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { Table, Tr, Td } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 1: cell shading', () => {
     it('emits <w:shd> for a hex shorthand', async () => {

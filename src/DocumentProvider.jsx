@@ -36,6 +36,7 @@
 import { createElement, useMemo } from 'react'
 import { DocumentContext } from './DocumentContext.js'
 import { BasePathContext } from './BasePathContext.js'
+import { ThemeContext, DEFAULT_THEME } from './ThemeContext.js'
 
 /**
  * @typedef {Object} OutputEntry
@@ -111,7 +112,29 @@ export function createStore() {
     }
 }
 
-export default function DocumentProvider({ children, basePath = '', store: externalStore }) {
+/**
+ * Merge a partial theme into the defaults. Foundations only need to
+ * override the keys they care about; the rest fall back to DEFAULT_THEME.
+ */
+function mergeTheme(theme) {
+    if (!theme) return DEFAULT_THEME
+    return {
+        colors: { ...DEFAULT_THEME.colors, ...(theme.colors || {}) },
+        fonts: { ...DEFAULT_THEME.fonts, ...(theme.fonts || {}) },
+        ...Object.fromEntries(
+            Object.entries(theme).filter(
+                ([k]) => k !== 'colors' && k !== 'fonts',
+            ),
+        ),
+    }
+}
+
+export default function DocumentProvider({
+    children,
+    basePath = '',
+    theme,
+    store: externalStore,
+}) {
     // Prefer an externally-provided store when the caller wants to own
     // the aggregation (for off-screen / whole-site compiles). Otherwise
     // build one internally — the common case for live page rendering.
@@ -120,33 +143,34 @@ export default function DocumentProvider({ children, basePath = '', store: exter
         [externalStore],
     )
 
+    const resolvedBasePath = basePath || ''
+    const resolvedTheme = useMemo(() => mergeTheme(theme), [theme])
+
     // Expose the provider's full context stack as a closure so the
     // compile pipeline can re-wrap registered fragments with the same
     // contexts they rendered under — necessary because registrations
     // capture JSX element trees, not rendered output, and a later
-    // renderToStaticMarkup(fragment) starts outside any React tree
-    // (builders would otherwise fall back to context defaults and
-    // emit, for example, un-prefixed URLs).
+    // renderToStaticMarkup(fragment) starts outside any React tree.
     //
-    // Reassigned on every render so prop changes (basePath and any
-    // future context values) flow through even though the store's
-    // object identity is memoised.
-    //
-    // When adding a new cross-cutting context that builders consume
-    // (theme, locale, author, …), wrap it here — the compile pipeline
-    // does not need to change.
-    const resolvedBasePath = basePath || ''
+    // When adding a new cross-cutting context that builders consume,
+    // wrap it here — the compile pipeline does not need to change.
     store.wrapWithProviders = (children) =>
         createElement(
             BasePathContext.Provider,
             { value: resolvedBasePath },
-            children,
+            createElement(
+                ThemeContext.Provider,
+                { value: resolvedTheme },
+                children,
+            ),
         )
 
     return (
         <DocumentContext.Provider value={store}>
             <BasePathContext.Provider value={resolvedBasePath}>
-                {children}
+                <ThemeContext.Provider value={resolvedTheme}>
+                    {children}
+                </ThemeContext.Provider>
             </BasePathContext.Provider>
         </DocumentContext.Provider>
     )

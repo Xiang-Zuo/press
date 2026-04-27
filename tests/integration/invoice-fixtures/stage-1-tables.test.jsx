@@ -4,7 +4,7 @@
  */
 import React from 'react'
 import { describe, it, expect } from 'vitest'
-import { compileInvoice, verifyDocx } from './_harness.js'
+import { compileInvoice, verifyDocx } from './_harness.jsx'
 import { Stage1Invoice } from './stage-1-tables.jsx'
 
 describe('stage 1: tables fixture', () => {

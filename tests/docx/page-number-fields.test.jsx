@@ -9,7 +9,7 @@ import {
     PageNumber,
     TotalPages,
 } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 4: page-number field codes', () => {
     it('emits a PAGE field for <PageNumber/>', async () => {

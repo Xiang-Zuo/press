@@ -17,3 +17,9 @@ export {
     compileSubtree,
     compileDocument,
 } from './compileRegistrations.js'
+export {
+    useDocumentTheme,
+    resolveThemeColor,
+    resolveThemeFont,
+    DEFAULT_THEME,
+} from './ThemeContext.js'

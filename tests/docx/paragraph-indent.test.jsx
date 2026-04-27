@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { Paragraph, cm } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 3: paragraph indentation', () => {
     it('emits <w:ind> with left + firstLine attrs', async () => {

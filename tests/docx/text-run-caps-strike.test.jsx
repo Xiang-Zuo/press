@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { Paragraph, TextRun } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 3: TextRun caps / strike', () => {
     it('emits <w:smallCaps/>', async () => {

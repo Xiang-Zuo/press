@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import { Table, Tr, Td, cm } from '../../src/docx/index.js'
-import { compileInvoice } from '../integration/invoice-fixtures/_harness.js'
+import { compileInvoice } from '../integration/invoice-fixtures/_harness.jsx'
 
 describe('Stage 1: fixed table layout and column widths', () => {
     it('emits <w:tblLayout w:type="fixed"/> by default when columnWidths is set', async () => {

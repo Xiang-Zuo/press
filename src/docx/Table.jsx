@@ -48,6 +48,26 @@ import {
 } from 'react'
 import Paragraph from './Paragraph.jsx'
 import TextRun from './TextRun.jsx'
+import { useDocumentTheme, resolveThemeColor } from '../ThemeContext.js'
+
+/**
+ * Run a borders object through theme color resolution. Each side's
+ * `color` key may be a hex literal or a theme key like 'softBorder'.
+ */
+function resolveBordersTheme(borders, theme) {
+    if (!borders) return borders
+    const out = {}
+    for (const [side, sideProps] of Object.entries(borders)) {
+        if (!sideProps) continue
+        out[side] = {
+            ...sideProps,
+            ...(sideProps.color
+                ? { color: resolveThemeColor(sideProps.color, theme) }
+                : {}),
+        }
+    }
+    return out
+}
 
 const TableCtx = createContext({ widths: null, borderColor: 'cccccc' })
 
@@ -84,6 +104,7 @@ export function Table({
     children,
     ...props
 }) {
+    const theme = useDocumentTheme()
     const tableAttrs = {}
 
     if (columnWidths && columnWidths.length) {
@@ -100,8 +121,9 @@ export function Table({
         tableAttrs['data-table-width-type'] = width.type ?? 'pct'
     }
 
-    if (borders) {
-        for (const [side, sideProps] of Object.entries(borders)) {
+    const resolvedBorders = resolveBordersTheme(borders, theme)
+    if (resolvedBorders) {
+        for (const [side, sideProps] of Object.entries(resolvedBorders)) {
             if (!sideProps) continue
             // The IR map uses `insideh`/`insidev` (single token) to keep
             // attribute names parser-friendly. Translate from camelCase.
@@ -120,8 +142,15 @@ export function Table({
         }
     }
 
+    // Resolve borderColor against the theme too — it's the per-cell
+    // default border color used when a Td doesn't override.
+    const resolvedBorderColor =
+        resolveThemeColor(borderColor, theme) ?? borderColor
+
     return (
-        <TableCtx.Provider value={{ widths, borderColor }}>
+        <TableCtx.Provider
+            value={{ widths, borderColor: resolvedBorderColor, theme }}
+        >
             <div data-type="table" className={className} {...tableAttrs} {...props}>
                 {children}
             </div>
@@ -208,7 +237,7 @@ export function Td({
     children,
     ...rest
 }) {
-    const { widths, borderColor } = useContext(TableCtx)
+    const { widths, borderColor, theme } = useContext(TableCtx)
     const colWidth = width ?? widths?.[_col]
 
     const defaults = {
@@ -231,9 +260,11 @@ export function Td({
     if (shading) {
         const s =
             typeof shading === 'string' ? { fill: shading } : shading
-        if (s.fill) defaults['data-shading-fill'] = s.fill
+        const resolvedFill = resolveThemeColor(s.fill, theme)
+        const resolvedColor = resolveThemeColor(s.color, theme)
+        if (resolvedFill) defaults['data-shading-fill'] = resolvedFill
         if (s.type) defaults['data-shading-type'] = s.type
-        if (s.color) defaults['data-shading-color'] = s.color
+        if (resolvedColor) defaults['data-shading-color'] = resolvedColor
     }
     if (valign) {
         defaults['data-valign'] = valign

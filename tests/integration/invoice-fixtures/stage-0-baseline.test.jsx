@@ -7,7 +7,7 @@
  */
 import React from 'react'
 import { describe, it, expect } from 'vitest'
-import { compileInvoice, verifyDocx } from './_harness.js'
+import { compileInvoice, verifyDocx } from './_harness.jsx'
 import { BaselineInvoice } from './stage-0-baseline.jsx'
 
 describe('stage 0: baseline invoice fixture', () => {

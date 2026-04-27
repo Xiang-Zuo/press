@@ -13,7 +13,7 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { describe, it } from 'vitest'
-import { compileInvoice, verifyDocx } from './_harness.js'
+import { compileInvoice, verifyDocx } from './_harness.jsx'
 import { FIXTURES } from './fixtures.jsx'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
