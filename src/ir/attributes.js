@@ -153,6 +153,12 @@ export const attributeMap = {
     // leader is none/dot/hyphen/underscore/middleDot. Foundations
     // typically construct these via the <Paragraph tabStops=…> prop
     // and the unit helpers (cm, mm, inch, pt).
+    // Paragraph-level named style ('Title', 'Heading1', 'Body', …).
+    // Maps to `<w:pStyle w:val="…"/>` in the docx adapter. Distinct
+    // from the run-level `data-style` (default fallthrough), which
+    // emits `<w:rStyle>`.
+    'data-paragraph-style': { path: ['paragraphStyle'] },
+
     'data-tab-stops': {
         path: ['tabStops'],
         transform: (v) => {

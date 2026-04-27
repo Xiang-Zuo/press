@@ -55,6 +55,118 @@ export const DEFAULT_THEME = {
         // Monospace (code, fixed-width data). Stage 6+.
         mono: 'Consolas',
     },
+    /**
+     * Typography roles. Each entry is a small `{ font, size, bold,
+     * italics, color, smallCaps, allCaps, strike, paragraph }` shape;
+     * `font` and `color` may be theme keys ('body', 'heading', 'accent',
+     * …) which resolve at compile time. `size` is in half-points
+     * (use the convertPointsToHalfPoints helper / `pt(n)` wrapper).
+     *
+     * Press synthesises OOXML paragraph styles + character styles from
+     * this registry on docx compile. Builders consume roles via
+     * `<Paragraph role="Title">` / `<TextRun role="Label">`; the docx
+     * adapter emits style references (<w:pStyle>/<w:rStyle>) instead
+     * of inline run properties, so users can edit fonts/colors/sizes
+     * from Word's Styles pane without find-and-replace formatting.
+     *
+     * Roles split into two natural buckets:
+     *   - block-level (paragraph): set both paragraph and run properties,
+     *     applied via `<Paragraph role="…">`. Use for whole-paragraph
+     *     constructs like Title, Heading1-3, Body, Display.
+     *   - inline (character): set run properties only, applied via
+     *     `<TextRun role="…">`. Use for inline emphasis like Label,
+     *     Caption, BodyStrong.
+     *
+     * Foundations override individual entries by passing
+     * `theme.typography.<RoleName>` partial — anything not specified
+     * inherits the default.
+     */
+    typography: {
+        // ---- Block-level roles (paragraph) -----------------------------
+        Title: {
+            font: 'heading',
+            size: 56,
+            bold: true,
+            color: 'accent',
+            paragraph: { spacing: { after: 240 } },
+        },
+        Heading1: {
+            font: 'heading',
+            size: 32,
+            bold: true,
+            color: 'body',
+            paragraph: { spacing: { before: 240, after: 120 } },
+        },
+        Heading2: {
+            font: 'heading',
+            size: 26,
+            bold: true,
+            color: 'body',
+            paragraph: { spacing: { before: 200, after: 100 } },
+        },
+        Heading3: {
+            font: 'heading',
+            size: 22,
+            bold: true,
+            color: 'body',
+            paragraph: { spacing: { before: 160, after: 80 } },
+        },
+        Body: {
+            font: 'body',
+            size: 22,
+            color: 'body',
+            paragraph: { spacing: { line: 276 } }, // 1.15 line height
+        },
+        Display: {
+            font: 'body',
+            size: 28,
+            bold: true,
+            color: 'body',
+        },
+
+        // ---- Inline roles (character) ----------------------------------
+        BodyStrong: { font: 'body', size: 22, bold: true, color: 'body' },
+        Label: {
+            font: 'body',
+            size: 18,
+            bold: true,
+            color: 'muted',
+            allCaps: true,
+        },
+        Caption: { font: 'body', size: 18, color: 'muted' },
+        TableHeader: {
+            font: 'heading',
+            size: 20,
+            bold: true,
+            color: 'surface',
+        },
+        TotalLine: {
+            font: 'heading',
+            size: 26,
+            bold: true,
+            color: 'surface',
+        },
+    },
+    /**
+     * Roles whose declaration should land in the OOXML paragraphStyles
+     * bucket vs the characterStyles bucket. Block roles cover both
+     * paragraph and run properties; inline roles cover only run
+     * properties. Foundations adding new roles should classify them
+     * here; unclassified roles default to character-style (run-only).
+     */
+    typographyKinds: {
+        Title: 'paragraph',
+        Heading1: 'paragraph',
+        Heading2: 'paragraph',
+        Heading3: 'paragraph',
+        Body: 'paragraph',
+        Display: 'paragraph',
+        BodyStrong: 'character',
+        Label: 'character',
+        Caption: 'character',
+        TableHeader: 'character',
+        TotalLine: 'character',
+    },
 }
 
 export const ThemeContext = createContext(DEFAULT_THEME)

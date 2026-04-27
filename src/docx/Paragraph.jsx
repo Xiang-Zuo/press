@@ -17,7 +17,7 @@ import Math from './Math.jsx'
  * Build the data-* attribute pairs for paragraph-level Stage-3 props.
  * Returns a plain object that gets spread onto the rendered element.
  */
-function paragraphPolishProps({ tabStops, indent }) {
+function paragraphPolishProps({ tabStops, indent, role }) {
     const out = {}
     if (Array.isArray(tabStops) && tabStops.length) {
         out['data-tab-stops'] = JSON.stringify(tabStops)
@@ -28,6 +28,12 @@ function paragraphPolishProps({ tabStops, indent }) {
         if (indent.right != null) out['data-indent-right'] = indent.right
         if (indent.firstLine != null) out['data-indent-firstline'] = indent.firstLine
         if (indent.hanging != null) out['data-indent-hanging'] = indent.hanging
+    }
+    // Stage 6.0: <Paragraph role="Title"> attaches a named OOXML
+    // paragraph style. Resolution to actual font/size/color happens
+    // through theme.typography at compile time.
+    if (typeof role === 'string' && role.length) {
+        out['data-paragraph-style'] = role
     }
     return out
 }
@@ -55,10 +61,11 @@ export default function Paragraph({
     data,
     tabStops,
     indent,
+    role,
     children,
     ...props
 }) {
-    const polish = paragraphPolishProps({ tabStops, indent })
+    const polish = paragraphPolishProps({ tabStops, indent, role })
 
     if (data) {
         const parts = parseStyledString(data)

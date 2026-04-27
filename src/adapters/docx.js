@@ -51,6 +51,7 @@ import {
     FootnoteReferenceRun,
 } from 'docx'
 import { fetchAsset } from '../assets/fetch.js'
+import { buildStylePack } from '../styles/buildStylePack.js'
 
 // ============================================================================
 // Public API
@@ -118,6 +119,9 @@ export async function buildDocument(input, options = {}) {
 
     const {
         paragraphStyles,
+        characterStyles,
+        theme,
+        typography,
         numbering,
         pageMargin,
         pageSize,
@@ -221,8 +225,47 @@ export async function buildDocument(input, options = {}) {
         sections: [sectionOptions],
     }
 
-    if (paragraphStyles && paragraphStyles.length) {
-        docOptions.styles = { paragraphStyles }
+    // Stage 6.0: synthesise OOXML styles from theme.typography (or an
+    // explicit typography registry) and merge with caller-supplied
+    // paragraphStyles / characterStyles. The synthesised pack provides
+    // document defaults (so every run inherits theme.fonts.body without
+    // every TextRun emitting `data-font`), built-in style overrides
+    // (Word's Title/Heading1-6 routed through `default.*`), and named
+    // styles that builders reference via `<Paragraph role="…">` /
+    // `<TextRun role="…">`. Caller styles override on id conflict.
+    //
+    // We synthesise whenever a theme is supplied, even if its
+    // typography is partial — buildStylePack falls back to
+    // DEFAULT_THEME entries for missing roles so the docx still gets
+    // a useful style pack.
+    const stylesTheme = typography
+        ? { ...(theme || {}), typography }
+        : theme
+    if (stylesTheme) {
+        const pack = buildStylePack(stylesTheme, {
+            paragraphStyles,
+            characterStyles,
+        })
+        const stylesBlock = {}
+        if (pack.default && Object.keys(pack.default).length) {
+            stylesBlock.default = pack.default
+        }
+        if (pack.paragraphStyles.length) {
+            stylesBlock.paragraphStyles = pack.paragraphStyles
+        }
+        if (pack.characterStyles.length) {
+            stylesBlock.characterStyles = pack.characterStyles
+        }
+        if (Object.keys(stylesBlock).length) docOptions.styles = stylesBlock
+    } else if (
+        (paragraphStyles && paragraphStyles.length) ||
+        (characterStyles && characterStyles.length)
+    ) {
+        // Legacy path: caller passed only raw styles, no theme. Pass
+        // through verbatim so existing foundations keep working.
+        docOptions.styles = {}
+        if (paragraphStyles?.length) docOptions.styles.paragraphStyles = paragraphStyles
+        if (characterStyles?.length) docOptions.styles.characterStyles = characterStyles
     }
 
     if (numbering && numbering.length) {
@@ -383,7 +426,12 @@ function irToParagraph(node) {
     if (node.heading) {
         options.heading = toHeadingLevel(node.heading)
     }
-    if (node.style) {
+    // Paragraph-level named style (data-paragraph-style on the element,
+    // emitted by `<Paragraph role="…">`). Wins over node.style which is
+    // the legacy run-level 'Hyperlink' marker.
+    if (node.paragraphStyle) {
+        options.style = node.paragraphStyle
+    } else if (node.style) {
         options.style = node.style
     }
     if (node.alignment) {

@@ -74,9 +74,13 @@ describe('attributeMap', () => {
         //   + 4 data-indent-{left,right,firstline,hanging}
         //   + 1 data-tab-stops (JSON-encoded array)
         //   + 3 data-{smallcaps,allcaps,strike}
-        //   = 81 total.
+        //   = 81.
+        //
+        // Stage 6.0 (typography roles via OOXML styles):
+        //   + 1 data-paragraph-style
+        //   = 82 total.
         const keys = Object.keys(attributeMap)
-        expect(keys).toHaveLength(81)
+        expect(keys).toHaveLength(82)
     })
 
     it('does not contain data-type', () => {

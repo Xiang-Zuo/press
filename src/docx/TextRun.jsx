@@ -37,11 +37,16 @@ export default function TextRun({
     allCaps,
     strike,
     style,
+    role,
     ...props
 }) {
     const theme = useDocumentTheme()
     const resolvedColor = resolveThemeColor(color, theme)
     const resolvedFont = resolveThemeFont(font, theme)
+    // Stage 6.0: `role="Label"` references a named OOXML character
+    // style. Maps to `data-style` (the existing run-style channel).
+    // Inline overrides (color, size, bold, …) win over the style.
+    const resolvedStyle = style ?? role
     const dataProps = { 'data-type': 'text' }
     if (bold) dataProps['data-bold'] = 'true'
     if (italics) dataProps['data-italics'] = 'true'
@@ -52,7 +57,7 @@ export default function TextRun({
     if (smallCaps) dataProps['data-smallcaps'] = 'true'
     if (allCaps) dataProps['data-allcaps'] = 'true'
     if (strike) dataProps['data-strike'] = 'true'
-    if (style) dataProps['data-style'] = style
+    if (resolvedStyle) dataProps['data-style'] = resolvedStyle
 
     return (
         <span {...dataProps} {...props}>
