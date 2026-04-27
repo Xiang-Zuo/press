@@ -30,4 +30,8 @@ export {
     convertCentimetersToTwip,
     convertInchesToTwip,
     convertPointsToHalfPoints,
+    cm,
+    mm,
+    inch,
+    pt,
 } from './units.js'

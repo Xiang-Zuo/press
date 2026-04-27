@@ -52,9 +52,20 @@ describe('attributeMap', () => {
         // Press-native additions (not in legacy):
         //   + 1 data-page-break-before    (Slice 6)
         //   + 3 data-toc-*                (Slice 6 — TOC builder options)
-        //   = 44 total.
+        //   = 44.
+        //
+        // Stage 1 of press-professional-docx (table foundations):
+        //   + 3 data-shading-{fill,color,type}
+        //   + 1 data-valign
+        //   + 1 data-row-header
+        //   + 1 data-table-column-widths
+        //   + 1 data-table-layout
+        //   + 2 data-table-width-{size,type}
+        //   + 18 data-table-borders-{6 sides}-{style,size,color}
+        //         (top, bottom, left, right, insideh, insidev)
+        //   = 71 total.
         const keys = Object.keys(attributeMap)
-        expect(keys).toHaveLength(44)
+        expect(keys).toHaveLength(71)
     })
 
     it('does not contain data-type', () => {

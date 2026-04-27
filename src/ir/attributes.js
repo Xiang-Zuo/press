@@ -47,6 +47,23 @@ const toInt = (v) => {
 }
 
 /**
+ * Parse a comma-separated list of integers (whitespace tolerant).
+ * Used by `data-table-column-widths`, where the attribute encodes an
+ * array of twip values like "8504,2268,851,2268". Empty / non-numeric
+ * tokens are dropped — downstream callers treat an empty array the
+ * same as "no column widths declared".
+ */
+const parseIntList = (v) => {
+    if (typeof v !== 'string') return v
+    return v
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => parseInt(s, 10))
+        .filter((n) => Number.isFinite(n))
+}
+
+/**
  * Explicit attribute → IR path mapping. Entries are listed in the same
  * order as the legacy switch for ease of cross-reference.
  */
@@ -93,6 +110,73 @@ export const attributeMap = {
     'data-borders-right-style': { path: ['borders', 'right', 'style'] },
     'data-borders-right-size': { path: ['borders', 'right', 'size'] },
     'data-borders-right-color': { path: ['borders', 'right', 'color'] },
+
+    // ------------------------------------------------------------------
+    // Table-cell additions (Stage 1 of the press-professional-docx plan)
+    // ------------------------------------------------------------------
+
+    // Cell shading. `data-shading-fill` is the load-bearing attribute
+    // (the solid background color). `data-shading-type` defaults to
+    // 'clear' in the adapter so a plain fill JSX prop produces a solid
+    // background without callers having to remember the OOXML idiom.
+    'data-shading-fill': { path: ['shading', 'fill'] },
+    'data-shading-color': { path: ['shading', 'color'] },
+    'data-shading-type': { path: ['shading', 'type'] },
+
+    // Vertical alignment of the cell's content. `top` | `center` | `bottom`.
+    // Maps to docx's VerticalAlignTable enum at the adapter layer.
+    'data-valign': { path: ['verticalAlign'] },
+
+    // Row-level: whether the row repeats as a header on each new page
+    // when the table breaks. Presence-only — any truthy value counts.
+    'data-row-header': { path: ['tableHeader'], transform: asTrue },
+
+    // ------------------------------------------------------------------
+    // Table-level options (Stage 1)
+    //
+    // Stored under the prefixed `tableXxx` namespace so they don't
+    // collide with the cell-level `width` / `borders` properties that
+    // existed before. `irToTable` reads these on table-typed nodes.
+    // ------------------------------------------------------------------
+
+    // Column widths in twips. Emitted as a comma-separated string on
+    // the `<table>` element by Table.jsx; parsed back to an int array
+    // here. Used with `tableLayout: 'fixed'` to lock columns; without
+    // a fixed layout, Word redistributes columns to fit content.
+    'data-table-column-widths': {
+        path: ['tableColumnWidths'],
+        transform: parseIntList,
+    },
+
+    // 'fixed' | 'autofit'. Default in the adapter is 'fixed' when
+    // tableColumnWidths is set, undefined otherwise (Word's default).
+    'data-table-layout': { path: ['tableLayout'] },
+
+    // Whole-table width. Distinct from per-cell width. Same { size, type }
+    // shape (pct/dxa/auto) as cell widths.
+    'data-table-width-size': { path: ['tableWidth', 'size'] },
+    'data-table-width-type': { path: ['tableWidth', 'type'] },
+
+    // Table-level default borders. Per-cell borders still win (and
+    // already exist via `data-borders-*`); these set the table grid.
+    'data-table-borders-top-style': { path: ['tableBorders', 'top', 'style'] },
+    'data-table-borders-top-size': { path: ['tableBorders', 'top', 'size'] },
+    'data-table-borders-top-color': { path: ['tableBorders', 'top', 'color'] },
+    'data-table-borders-bottom-style': { path: ['tableBorders', 'bottom', 'style'] },
+    'data-table-borders-bottom-size': { path: ['tableBorders', 'bottom', 'size'] },
+    'data-table-borders-bottom-color': { path: ['tableBorders', 'bottom', 'color'] },
+    'data-table-borders-left-style': { path: ['tableBorders', 'left', 'style'] },
+    'data-table-borders-left-size': { path: ['tableBorders', 'left', 'size'] },
+    'data-table-borders-left-color': { path: ['tableBorders', 'left', 'color'] },
+    'data-table-borders-right-style': { path: ['tableBorders', 'right', 'style'] },
+    'data-table-borders-right-size': { path: ['tableBorders', 'right', 'size'] },
+    'data-table-borders-right-color': { path: ['tableBorders', 'right', 'color'] },
+    'data-table-borders-insideh-style': { path: ['tableBorders', 'insideHorizontal', 'style'] },
+    'data-table-borders-insideh-size': { path: ['tableBorders', 'insideHorizontal', 'size'] },
+    'data-table-borders-insideh-color': { path: ['tableBorders', 'insideHorizontal', 'color'] },
+    'data-table-borders-insidev-style': { path: ['tableBorders', 'insideVertical', 'style'] },
+    'data-table-borders-insidev-size': { path: ['tableBorders', 'insideVertical', 'size'] },
+    'data-table-borders-insidev-color': { path: ['tableBorders', 'insideVertical', 'color'] },
 
     'data-image-type': { path: ['imageType'] },
 

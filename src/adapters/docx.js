@@ -23,6 +23,9 @@ import {
     Table,
     TableRow,
     TableCell,
+    TableLayoutType,
+    VerticalAlign,
+    ShadingType,
     ExternalHyperlink,
     InternalHyperlink,
     ImageRun,
@@ -490,6 +493,17 @@ function irToTextRunPair(node) {
     if (node.italics === 'true' || node.italics === true) options.italics = true
     if (node.underline) options.underline = node.underline
     if (node.style) options.style = node.style
+    // Stage 1 of press-professional-docx: branded text needs color/size/font.
+    // The IR's color/size/font come from the default fallthrough rule on
+    // unknown data-* attributes (data-color, data-size, data-font set by
+    // the TextRun builder). docx@9.x expects: color = hex without '#',
+    // size = half-points (28pt = 56), font = family name string.
+    if (node.color) options.color = node.color
+    if (node.size != null) {
+        const sz = typeof node.size === 'string' ? parseInt(node.size, 10) : node.size
+        if (Number.isFinite(sz)) options.size = sz
+    }
+    if (node.font) options.font = node.font
 
     result.push(new TextRun(options))
     return result
@@ -519,14 +533,53 @@ function irToTable(node) {
     const rows = (node.children || [])
         .filter((child) => child.type === 'tableRow')
         .map(irToTableRow)
-    return new Table({ rows })
+
+    const options = { rows }
+
+    // Column widths (twips array). Parsed from `data-table-column-widths`.
+    if (Array.isArray(node.tableColumnWidths) && node.tableColumnWidths.length) {
+        options.columnWidths = node.tableColumnWidths
+    }
+
+    // Layout. Default to FIXED whenever explicit column widths are
+    // present — Word's autofit otherwise redistributes the columns to
+    // fit content, undoing the foundation's layout intent. Foundations
+    // that want autofit can opt out with `layout="autofit"`.
+    if (node.tableLayout) {
+        options.layout =
+            node.tableLayout === 'autofit'
+                ? TableLayoutType.AUTOFIT
+                : TableLayoutType.FIXED
+    } else if (options.columnWidths) {
+        options.layout = TableLayoutType.FIXED
+    }
+
+    // Whole-table width (distinct from per-cell width).
+    if (node.tableWidth) {
+        options.width = toTableCellWidth(node.tableWidth)
+    }
+
+    // Table-default borders. Per-cell borders still win.
+    if (node.tableBorders) {
+        options.borders = toBorders(node.tableBorders)
+    }
+
+    return new Table(options)
 }
 
 function irToTableRow(node) {
     const children = (node.children || [])
         .filter((child) => child.type === 'tableCell')
         .map(irToTableCell)
-    return new TableRow({ children })
+
+    const options = { children }
+
+    // Header rows repeat at the top of each new page when the table breaks.
+    if (node.tableHeader) {
+        options.tableHeader = true
+    }
+
+    return new TableRow(options)
 }
 
 function irToTableCell(node) {
@@ -540,6 +593,12 @@ function irToTableCell(node) {
     }
     if (node.borders) {
         options.borders = toBorders(node.borders)
+    }
+    if (node.shading) {
+        options.shading = toShading(node.shading)
+    }
+    if (node.verticalAlign) {
+        options.verticalAlign = toVerticalAlign(node.verticalAlign)
     }
 
     // Table cell children must be Paragraph or Table instances.
@@ -667,6 +726,48 @@ function toBorders(borders) {
         }
     }
     return result
+}
+
+// --- Cell shading ---
+
+const SHADING_TYPES = {
+    clear: ShadingType.CLEAR,
+    nil: ShadingType.NIL,
+    solid: ShadingType.CLEAR, // alias — `solid` is the natural prop name
+    diagonalCross: ShadingType.DIAGONAL_CROSS,
+    diagonalStripe: ShadingType.DIAGONAL_STRIPE,
+    horizontalStripe: ShadingType.HORIZONTAL_STRIPE,
+    verticalStripe: ShadingType.VERTICAL_STRIPE,
+}
+
+/**
+ * Build a TableCell `shading` option from an IR shading object.
+ *
+ * Foundations almost always want a solid background: `<Td shading="4775b2">`.
+ * That JSX shorthand resolves to `{ fill: '4775b2' }` here, and we default
+ * `type: CLEAR` and `color: 'auto'` — the standard OOXML idiom for "plain
+ * fill, no overlay pattern". Without `type`, Word may render unpredictably
+ * across versions; without `color: 'auto'`, the library may emit
+ * `w:color=""` which Word repairs on open.
+ */
+function toShading(shading) {
+    const fill = shading.fill || '000000'
+    const type = SHADING_TYPES[shading.type] ?? ShadingType.CLEAR
+    const color = shading.color || 'auto'
+    return { type, fill, color }
+}
+
+// --- Cell vertical alignment ---
+
+const VERTICAL_ALIGNS = {
+    top: VerticalAlign.TOP,
+    center: VerticalAlign.CENTER,
+    middle: VerticalAlign.CENTER, // alias — natural-language CSS-ish
+    bottom: VerticalAlign.BOTTOM,
+}
+
+function toVerticalAlign(v) {
+    return VERTICAL_ALIGNS[v] ?? VerticalAlign.TOP
 }
 
 // --- Positional tab ---

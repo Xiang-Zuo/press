@@ -73,3 +73,24 @@ export function convertCentimetersToTwip(centimeters) {
 export function convertPointsToHalfPoints(points) {
     return Math.round(points * 2)
 }
+
+// ---------------------------------------------------------------------------
+// Short aliases — for terse JSX. The longer names above remain canonical
+// (and match the docx library's own helpers); these are sugar so foundation
+// code can write `columnWidths={[cm(15), cm(4), cm(1.5), cm(4)]}` instead of
+// `[convertCentimetersToTwip(15), convertCentimetersToTwip(4), …]`.
+// ---------------------------------------------------------------------------
+
+/** Centimeters to twips. Alias of `convertCentimetersToTwip`. */
+export const cm = convertCentimetersToTwip
+
+/** Millimeters to twips. Alias of `convertMillimetersToTwip`. */
+export const mm = convertMillimetersToTwip
+
+/** Inches to twips. Alias of `convertInchesToTwip`. */
+export const inch = convertInchesToTwip
+
+/** Points to twips. There are 20 twips in a point. */
+export function pt(points) {
+    return Math.round(points * 20)
+}

@@ -12,6 +12,7 @@
  */
 import React from 'react'
 import { BaselineInvoice } from './stage-0-baseline.jsx'
+import { Stage1Invoice } from './stage-1-tables.jsx'
 
 export const FIXTURES = [
     {
@@ -19,5 +20,12 @@ export const FIXTURES = [
         description: 'Pre-professional invoice — flat headings, no table',
         render: () => <BaselineInvoice />,
         options: { title: 'Invoice INV-0001 (Stage 0 baseline)' },
+    },
+    {
+        name: 'stage-1-tables',
+        description:
+            'Real line-items table with shaded header, soft grid, fixed columns',
+        render: () => <Stage1Invoice />,
+        options: { title: 'Invoice INV-0001 (Stage 1 — table foundations)' },
     },
 ]
