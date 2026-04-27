@@ -366,6 +366,12 @@ function blockNodeToTypst(node) {
         case 'link':
             return inlineNodeToTypst(node)
 
+        case 'math':
+            // Bare math at block level (when an adapter is fed a single
+            // math element rather than a paragraph wrapping one). Reuse
+            // the inline emitter so the output stays consistent.
+            return inlineNodeToTypst(node)
+
         case 'paragraph':
             return inlineChildrenToTypst(node.children || []).trim()
 
@@ -496,8 +502,14 @@ function inlineNodeToTypst(node) {
     if (node.type === 'text') {
         let text = escapeTypstInline(node.content || '')
         if (node.code === 'true') text = '`' + (node.content || '') + '`'
-        if (node.bold === 'true') text = `*${text}*`
-        if (node.italics === 'true') text = `_${text}_`
+        // Use the function form `#strong[…]` / `#emph[…]` instead of the
+        // markup form `*…*` / `_…_`. Typst's markup-mode marks fail to
+        // close when the closing character butts directly against an
+        // alphanumeric (e.g. `_journal_4` keeps emphasis open through the
+        // rest of the document, producing "unclosed delimiter" errors).
+        // The function form has no boundary requirement.
+        if (node.bold === 'true') text = `#strong[${text}]`
+        if (node.italics === 'true') text = `#emph[${text}]`
         if (node.underline && (node.underline === 'true' || typeof node.underline === 'object')) {
             text = `#underline[${text}]`
         }
@@ -508,6 +520,26 @@ function inlineNodeToTypst(node) {
         const href = node.href || ''
         const inner = inlineChildrenToTypst(node.children || [])
         return `#link(${quoteTypstString(href)})[${inner}]`
+    }
+
+    if (node.type === 'math') {
+        // Math is delegated to the mitex typst package — foundations
+        // import mitex in their preamble. mitex emits typst math
+        // content (not arbitrary markup), so the call goes inside a
+        // typst math context: `$#mitex(\`…\`)$` for inline (no space
+        // around the dollars), `$ #mitex(\`…\`) $` for display (the
+        // spaces are typst's own inline-vs-display switch).
+        //
+        // The latex source goes inside backticks (a typst raw string).
+        // mitex parses LaTeX from the raw string and re-emits typst
+        // math. No JS-side LaTeX → typst translation needed.
+        const display = node.display === 'true' || node.display === true
+        const src = node.latex || ''
+        const labelSuffix = node.id ? ` <${node.id}>` : ''
+        if (display) {
+            return `\n$ #mitex(\`${src}\`) $${labelSuffix}\n`
+        }
+        return `$#mitex(\`${src}\`)$${labelSuffix}`
     }
 
     return ''

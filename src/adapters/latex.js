@@ -379,6 +379,12 @@ function blockNodeToLatex(node) {
         case 'link':
             return inlineNodeToLatex(node)
 
+        case 'math':
+            // Bare math at block level (not wrapped in a paragraph). The
+            // inline emitter already produces the right `\[…\]` shape
+            // for display:true.
+            return inlineNodeToLatex(node)
+
         case 'paragraph':
             return inlineChildrenToLatex(node.children || []).trim()
 
@@ -594,6 +600,18 @@ function inlineNodeToLatex(node) {
         // The URL passes through unescaped — hyperref tolerates LaTeX-
         // special characters inside its first argument.
         return `\\href{${href}}{${inner}}`
+    }
+
+    if (node.type === 'math') {
+        // LaTeX is its own native math source — pass through verbatim.
+        // `$…$` for inline; `\[…\]` for display. The optional `\label{}`
+        // makes the equation referenceable from elsewhere via `\ref{}`
+        // / `\eqref{}`. The `amsmath` package (loaded by the standard
+        // preamble) provides `\eqref`; bare `\ref` works without it.
+        const display = node.display === 'true' || node.display === true
+        const src = node.latex || ''
+        const label = node.id ? `\\label{${node.id}}` : ''
+        return display ? `\\[${src}${label}\\]` : `$${src}$${label}`
     }
 
     return ''

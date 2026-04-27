@@ -13,6 +13,7 @@
  */
 import { parseStyledString } from '../docx/parseStyledString.js'
 import TextRun from './TextRun.jsx'
+import Math from './Math.jsx'
 
 export default function Paragraph({ as: Tag = 'p', data, children, ...props }) {
     if (data) {
@@ -20,17 +21,30 @@ export default function Paragraph({ as: Tag = 'p', data, children, ...props }) {
 
         return (
             <Tag data-type="paragraph" {...props}>
-                {parts.map((part, i) =>
-                    part.type === 'link' ? (
-                        <a
-                            key={i}
-                            data-type="link"
-                            data-href={part.href}
-                            href={part.href}
-                        >
-                            <span data-type="text">{part.content}</span>
-                        </a>
-                    ) : (
+                {parts.map((part, i) => {
+                    if (part.type === 'link') {
+                        return (
+                            <a
+                                key={i}
+                                data-type="link"
+                                data-href={part.href}
+                                href={part.href}
+                            >
+                                <span data-type="text">{part.content}</span>
+                            </a>
+                        )
+                    }
+                    if (part.type === 'math') {
+                        return (
+                            <Math
+                                key={i}
+                                latex={part.latex}
+                                display={part.display}
+                                id={part.id}
+                            />
+                        )
+                    }
+                    return (
                         <TextRun
                             key={i}
                             bold={part.bold}
@@ -41,7 +55,7 @@ export default function Paragraph({ as: Tag = 'p', data, children, ...props }) {
                             {part.content}
                         </TextRun>
                     )
-                )}
+                })}
             </Tag>
         )
     }

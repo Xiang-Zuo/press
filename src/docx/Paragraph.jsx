@@ -11,6 +11,7 @@
  */
 import { parseStyledString } from './parseStyledString.js'
 import TextRun from './TextRun.jsx'
+import Math from './Math.jsx'
 
 /**
  * Build the data-* attribute pairs for paragraph-level Stage-3 props.
@@ -64,19 +65,32 @@ export default function Paragraph({
 
         return (
             <Tag data-type="paragraph" {...polish} {...props}>
-                {parts.map((part, i) =>
-                    part.type === 'link' ? (
-                        <a
-                            key={i}
-                            data-type="externalHyperlink"
-                            data-link={part.href}
-                            href={part.href}
-                        >
-                            <span data-type="text" data-style="Hyperlink">
-                                {part.content}
-                            </span>
-                        </a>
-                    ) : (
+                {parts.map((part, i) => {
+                    if (part.type === 'link') {
+                        return (
+                            <a
+                                key={i}
+                                data-type="externalHyperlink"
+                                data-link={part.href}
+                                href={part.href}
+                            >
+                                <span data-type="text" data-style="Hyperlink">
+                                    {part.content}
+                                </span>
+                            </a>
+                        )
+                    }
+                    if (part.type === 'math') {
+                        return (
+                            <Math
+                                key={i}
+                                latex={part.latex}
+                                display={part.display}
+                                id={part.id}
+                            />
+                        )
+                    }
+                    return (
                         <TextRun
                             key={i}
                             bold={part.bold}
@@ -86,7 +100,7 @@ export default function Paragraph({
                             {part.content}
                         </TextRun>
                     )
-                )}
+                })}
             </Tag>
         )
     }

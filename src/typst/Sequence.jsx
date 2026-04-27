@@ -33,6 +33,7 @@ import CodeBlock from './CodeBlock.jsx'
 import List from './List.jsx'
 import BlockQuote from './BlockQuote.jsx'
 import Image from './Image.jsx'
+import Math from './Math.jsx'
 
 function renderElement(element, key) {
     if (!element || typeof element !== 'object') return null
@@ -89,6 +90,20 @@ function renderElement(element, key) {
                     caption={element.attrs?.caption}
                     width={element.attrs?.width}
                     id={element.attrs?.id || undefined}
+                />
+            )
+
+        case 'math':
+            // Block (display:true) and inline (display:false) share the
+            // builder. Inline math doesn't reach the sequence walker —
+            // it's wrapped inside paragraph HTML — but render the same
+            // way for safety in case a future caller surfaces it here.
+            return (
+                <Math
+                    key={key}
+                    latex={element.latex || ''}
+                    display={element.display !== false}
+                    id={element.id || undefined}
                 />
             )
 

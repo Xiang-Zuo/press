@@ -1,13 +1,17 @@
 /**
- * Parses a styled string with inline HTML marks (<strong>, <em>, <u>, <a>)
- * into an array of text/link part objects with style flags.
+ * Parses a styled string with inline HTML marks (<strong>, <em>, <u>, <a>,
+ * <span data-type="math">) into an array of text / link / math part
+ * objects with style flags.
  *
  * Ported from legacy report-sdk/src/utils.js:116-186, extended to support
  * <a href="..."> hyperlinks so paragraphs with auto-linked emails and URLs
- * produce real hyperlinks in the docx output.
+ * produce real hyperlinks in the docx output, and <span data-type="math">
+ * so inline math reaches the print adapters as a structured atom rather
+ * than being walked as opaque DOM (which turns MathML into raw operator
+ * text).
  *
  * @param {string} inputString - HTML string with inline marks.
- * @returns {Array<{type: string, content: string, bold?: boolean, italics?: boolean, underline?: object, href?: string}>}
+ * @returns {Array<{type: string, content?: string, bold?: boolean, italics?: boolean, underline?: object, href?: string, latex?: string, display?: boolean}>}
  *
  * @example
  * parseStyledString('Hello <strong>World</strong>')
@@ -22,7 +26,34 @@
  * //   { type: 'text', content: 'Visit ' },
  * //   { type: 'link', content: 'Example', href: 'https://example.com' }
  * // ]
+ *
+ * @example
+ * parseStyledString('Let $G$ be a graph')   // after semantic-parser wrapping
+ * // input: 'Let <span data-type="math" data-latex="G" data-display="false">…mathml…</span> be a graph'
+ * // => [
+ * //   { type: 'text', content: 'Let ' },
+ * //   { type: 'math', latex: 'G', display: false },
+ * //   { type: 'text', content: ' be a graph' }
+ * // ]
  */
+
+// Decode HTML-attribute entities written by sequence.js's escapeAttr().
+// Inverse of the four replacements there. `&amp;` last so a literal
+// `&amp;quot;` round-trips correctly.
+function decodeAttr(s) {
+    return String(s)
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+}
+
+function readAttr(attrs, name) {
+    const re = new RegExp(`${name}="([^"]*)"`)
+    const m = attrs.match(re)
+    return m ? decodeAttr(m[1]) : null
+}
+
 export function parseStyledString(inputString) {
     const createTextPart = (content, styles) => ({
         type: 'text',
@@ -48,13 +79,35 @@ export function parseStyledString(inputString) {
 
             // Handle <a> tags as links
             if (tag === 'a' && attrs) {
-                const hrefMatch = attrs.match(/href="([^"]*)"/)
-                const href = hrefMatch?.[1]
+                const href = readAttr(attrs, 'href')
                 if (href) {
                     result.push({
                         type: 'link',
                         content: innerText,
                         href,
+                    })
+                    lastIndex = offset + match.length
+                    return
+                }
+            }
+
+            // Handle <span data-type="math"> as an inline atom. The inner
+            // text is the pre-compiled MathML — discarded here because
+            // print adapters consume the LaTeX source instead. Browser-
+            // side renderers don't go through parseStyledString; they use
+            // dangerouslySetInnerHTML on the original paragraph HTML where
+            // the MathML survives intact.
+            if (tag === 'span' && attrs) {
+                const dataType = readAttr(attrs, 'data-type')
+                if (dataType === 'math') {
+                    const latex = readAttr(attrs, 'data-latex') || ''
+                    const display = readAttr(attrs, 'data-display') === 'true'
+                    const id = readAttr(attrs, 'data-id')
+                    result.push({
+                        type: 'math',
+                        latex,
+                        display,
+                        ...(id ? { id } : {}),
                     })
                     lastIndex = offset + match.length
                     return

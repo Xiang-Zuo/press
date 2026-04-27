@@ -46,8 +46,8 @@ describe('typst adapter: IR → Typst source', () => {
         const src = renderToContentTyp(
             <Paragraph data="See <strong>bold</strong> and <em>italic</em>." />,
         )
-        expect(src).toContain('*bold*')
-        expect(src).toContain('_italic_')
+        expect(src).toContain('#strong[bold]')
+        expect(src).toContain('#emph[italic]')
     })
 
     it('emits links via typst #link', () => {
@@ -161,7 +161,7 @@ describe('typst adapter: IR → Typst source', () => {
         ]
         const src = renderToContentTyp(<Sequence data={sequence} />)
         expect(src).toContain('== Intro')
-        expect(src).toContain('*bold*')
+        expect(src).toContain('#strong[bold]')
         expect(src).toContain('```py')
         expect(src).toContain('- first')
     })
