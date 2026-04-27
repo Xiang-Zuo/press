@@ -120,6 +120,8 @@ export async function buildDocument(input, options = {}) {
         paragraphStyles,
         numbering,
         pageMargin,
+        pageSize,
+        pageOrientation,
         ...documentMetadata
     } = options
 
@@ -143,13 +145,27 @@ export async function buildDocument(input, options = {}) {
     const { loadAsset } = options
     const children = await convertChildren(sections.flat(), loadAsset)
 
+    const pageOptions = {
+        pageNumbers: { start: 1, formatType: NumberFormat.DECIMAL },
+        ...(pageMargin ? { margin: pageMargin } : {}),
+    }
+    // Stage 4: page size + orientation. docx's IPageSizeAttributes
+    // requires width and height, so the orientation flag only takes
+    // effect when an explicit pageSize is set. Foundations that want
+    // orientation should pass pageSize too — pageSizes.A4 / .LETTER
+    // are exported presets.
+    if (pageSize) {
+        pageOptions.size = {
+            width: pageSize.width,
+            height: pageSize.height,
+            ...(pageOrientation ? { orientation: pageOrientation } : {}),
+        }
+    }
+
     const sectionOptions = {
         properties: {
             type: SectionType.CONTINUOUS,
-            page: {
-                pageNumbers: { start: 1, formatType: NumberFormat.DECIMAL },
-                ...(pageMargin ? { margin: pageMargin } : {}),
-            },
+            page: pageOptions,
         },
         children,
     }

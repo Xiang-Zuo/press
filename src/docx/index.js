@@ -24,6 +24,13 @@ export { BulletList, NumberedList } from './Lists.jsx'
 export { default as TableOfContents } from './TableOfContents.jsx'
 export { default as FootnoteReference } from './FootnoteReference.jsx'
 export { default as WebOnly } from './WebOnly.jsx'
+export {
+    PageHeader,
+    PageFooter,
+    PageNumber,
+    TotalPages,
+    pageSizes,
+} from './PageChrome.jsx'
 
 export {
     convertMillimetersToTwip,

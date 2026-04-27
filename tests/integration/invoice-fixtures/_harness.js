@@ -30,15 +30,46 @@ import { buildDocument } from '../../../src/adapters/docx.js'
 /**
  * Compile a JSX fragment all the way to a docx buffer.
  *
- * @param {React.ReactNode} jsx - The fragment to compile.
- * @param {Object} [options] - Forwarded to buildDocument as document-level
- *   options (title, paragraphStyles, numbering, pageMargin, header, footer, …).
+ * Accepts an optional `header` / `footer` JSX in the options bag — those
+ * get walked through the same IR pipeline and lifted into the docx
+ * Section's headers/footers slots, mirroring how
+ * `useDocumentOutput(block, 'docx', body, { role: 'header' })` flows
+ * through `compileToIR` in production. `headerFirstPageOnly` and
+ * `footerFirstPageOnly` flags are forwarded as well.
+ *
+ * @param {React.ReactNode} jsx - The body fragment to compile.
+ * @param {Object} [options] - Forwarded to buildDocument. Special keys:
+ *   - `header` (JSX): becomes the page header.
+ *   - `footer` (JSX): becomes the page footer.
+ *   - `headerFirstPageOnly` (boolean): differentiated first-page header.
+ *   - `footerFirstPageOnly` (boolean): differentiated first-page footer.
+ *   All other keys (title, pageMargin, pageSize, pageOrientation, ...)
+ *   pass through to buildDocument's options bag.
  * @returns {Promise<{ buffer: Buffer, zip: JSZip, documentXml: string }>}
  */
 export async function compileInvoice(jsx, options = {}) {
+    const {
+        header,
+        footer,
+        headerFirstPageOnly = false,
+        footerFirstPageOnly = false,
+        ...documentOptions
+    } = options
+
     const html = renderToStaticMarkup(jsx)
-    const ir = htmlToIR(html)
-    const doc = await buildDocument({ sections: [ir] }, options)
+    const sectionIr = htmlToIR(html)
+
+    const input = { sections: [sectionIr] }
+    if (header) {
+        input.header = htmlToIR(renderToStaticMarkup(header))
+        input.headerFirstPageOnly = headerFirstPageOnly
+    }
+    if (footer) {
+        input.footer = htmlToIR(renderToStaticMarkup(footer))
+        input.footerFirstPageOnly = footerFirstPageOnly
+    }
+
+    const doc = await buildDocument(input, documentOptions)
     const buffer = await Packer.toBuffer(doc)
     const zip = await JSZip.loadAsync(buffer)
     const documentXml = await zip.file('word/document.xml').async('string')

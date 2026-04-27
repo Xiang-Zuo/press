@@ -14,6 +14,7 @@ import React from 'react'
 import { BaselineInvoice } from './stage-0-baseline.jsx'
 import { Stage1Invoice } from './stage-1-tables.jsx'
 import { Stage2Invoice } from './stage-2-spans.jsx'
+import { Stage4Body, stage4Options } from './stage-4-chrome.jsx'
 
 export const FIXTURES = [
     {
@@ -34,5 +35,12 @@ export const FIXTURES = [
         description: 'Adds colSpan to the totals block for cleaner alignment',
         render: () => <Stage2Invoice />,
         options: { title: 'Invoice INV-0001 (Stage 2 — colSpan / rowSpan)' },
+    },
+    {
+        name: 'stage-4-chrome',
+        description:
+            'Adds page header (brand wordmark), tabbed footer with Page X of Y, A4 setup',
+        render: () => <Stage4Body />,
+        options: stage4Options(),
     },
 ]
