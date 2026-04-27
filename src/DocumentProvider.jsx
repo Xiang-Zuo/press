@@ -77,6 +77,18 @@ export function createStore() {
     // refs, but the walker filters them out.
     const blockOrder = []
 
+    /**
+     * Inner Map keys by `${format}@${role}` so a single block can
+     * register a body fragment + a header fragment + a footer
+     * fragment for the same format without colliding. Without this
+     * splitting, register(block, 'docx', body) followed by
+     * register(block, 'docx', header, { role: 'header' }) would
+     * overwrite the body — the second call's role tag is invisible
+     * to a plain `format` key.
+     */
+    const keyFor = (format, options) =>
+        `${format}@${(options && options.role) || 'body'}`
+
     return {
         register(block, format, fragment, options = {}) {
             let formatMap = outputs.get(block)
@@ -85,17 +97,19 @@ export function createStore() {
                 outputs.set(block, formatMap)
                 blockOrder.push(block)
             }
-            formatMap.set(format, { fragment, options })
+            formatMap.set(keyFor(format, options), { fragment, options })
         },
 
         getOutputs(format) {
             const result = []
+            const prefix = `${format}@`
             for (const block of blockOrder) {
                 const formatMap = outputs.get(block)
                 if (!formatMap) continue
-                const entry = formatMap.get(format)
-                if (entry) {
-                    result.push({ block, ...entry })
+                for (const [key, entry] of formatMap) {
+                    if (key.startsWith(prefix)) {
+                        result.push({ block, ...entry })
+                    }
                 }
             }
             return result

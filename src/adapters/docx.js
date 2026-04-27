@@ -1095,9 +1095,14 @@ async function irToImageParagraph(node, loadAsset) {
             imageOptions.floating = node.floating
         }
 
-        return new DocxParagraph({
+        const paragraphOptions = {
             children: [new ImageRun(imageOptions)],
-        })
+        }
+        if (node.alignment) {
+            paragraphOptions.alignment = toAlignment(node.alignment)
+        }
+
+        return new DocxParagraph(paragraphOptions)
     } catch (err) {
         console.error(`Error creating image element:`, err)
         return new DocxParagraph({})
