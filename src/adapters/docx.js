@@ -600,6 +600,18 @@ function irToTableCell(node) {
     if (node.verticalAlign) {
         options.verticalAlign = toVerticalAlign(node.verticalAlign)
     }
+    // Merge spans. docx's `rowSpan` is the starting-cell shorthand —
+    // the library handles the continue cells internally, so we don't
+    // need to emit explicit vMerge=continue on subsequent rows from
+    // the foundation side.
+    if (node.columnSpan) {
+        const n = typeof node.columnSpan === 'string' ? parseInt(node.columnSpan, 10) : node.columnSpan
+        if (Number.isFinite(n) && n > 1) options.columnSpan = n
+    }
+    if (node.rowSpan) {
+        const n = typeof node.rowSpan === 'string' ? parseInt(node.rowSpan, 10) : node.rowSpan
+        if (Number.isFinite(n) && n > 1) options.rowSpan = n
+    }
 
     // Table cell children must be Paragraph or Table instances.
     const children = (node.children || []).flatMap((child) => {

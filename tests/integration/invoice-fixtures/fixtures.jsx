@@ -13,6 +13,7 @@
 import React from 'react'
 import { BaselineInvoice } from './stage-0-baseline.jsx'
 import { Stage1Invoice } from './stage-1-tables.jsx'
+import { Stage2Invoice } from './stage-2-spans.jsx'
 
 export const FIXTURES = [
     {
@@ -27,5 +28,11 @@ export const FIXTURES = [
             'Real line-items table with shaded header, soft grid, fixed columns',
         render: () => <Stage1Invoice />,
         options: { title: 'Invoice INV-0001 (Stage 1 — table foundations)' },
+    },
+    {
+        name: 'stage-2-spans',
+        description: 'Adds colSpan to the totals block for cleaner alignment',
+        render: () => <Stage2Invoice />,
+        options: { title: 'Invoice INV-0001 (Stage 2 — colSpan / rowSpan)' },
     },
 ]

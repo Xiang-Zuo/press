@@ -136,20 +136,31 @@ export function Table({
  * cell can look up its width from the Table context, and to mark cells
  * in a `header` row for the default emphasis + heavier bottom border.
  *
+ * Column-index assignment is span-aware: a <Td colSpan={3}> takes
+ * three column slots, so the next cell is at index 3, not 1. Without
+ * this, a row with a colSpan'd cell followed by a per-column-width
+ * cell would pull the wrong width from `widths={…}`.
+ *
  * @param {Object} props
  * @param {boolean} [props.header=false] - Bolds text, thickens the bottom
  *   border, and marks the row as a docx tableHeader (it repeats at the
  *   top of each new page when the table breaks across pages).
  */
 export function Tr({ header = false, className, children, ...props }) {
-    const cells = Children.toArray(children).map((child, idx) =>
-        isValidElement(child)
-            ? cloneElement(child, {
-                  _col: child.props._col ?? idx,
-                  _header: child.props._header ?? header,
-              })
-            : child,
-    )
+    let nextCol = 0
+    const cells = Children.toArray(children).map((child) => {
+        if (!isValidElement(child)) return child
+        const col = child.props._col ?? nextCol
+        const span =
+            typeof child.props.colSpan === 'number' && child.props.colSpan > 1
+                ? child.props.colSpan
+                : 1
+        nextCol = col + span
+        return cloneElement(child, {
+            _col: col,
+            _header: child.props._header ?? header,
+        })
+    })
     const rowAttrs = header ? { 'data-row-header': '' } : {}
     return (
         <div data-type="tableRow" className={className} {...rowAttrs} {...props}>
@@ -190,6 +201,8 @@ export function Td({
     borderBottom,
     shading,
     valign,
+    colSpan,
+    rowSpan,
     className,
     style,
     children,
@@ -224,6 +237,12 @@ export function Td({
     }
     if (valign) {
         defaults['data-valign'] = valign
+    }
+    if (typeof colSpan === 'number' && colSpan > 1) {
+        defaults['data-grid-span'] = colSpan
+    }
+    if (typeof rowSpan === 'number' && rowSpan > 1) {
+        defaults['data-row-span'] = rowSpan
     }
 
     const flexStyle =

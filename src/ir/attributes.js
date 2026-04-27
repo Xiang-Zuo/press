@@ -127,6 +127,15 @@ export const attributeMap = {
     // Maps to docx's VerticalAlignTable enum at the adapter layer.
     'data-valign': { path: ['verticalAlign'] },
 
+    // Cell column merge: how many adjacent columns this cell spans.
+    'data-grid-span': { path: ['columnSpan'], transform: toInt },
+
+    // Cell row merge: how many rows this cell spans (vertical merge).
+    // The adapter uses docx's `rowSpan` shorthand, which expects only
+    // the *starting* cell to declare a count; library handles the
+    // merge-continue rows internally.
+    'data-row-span': { path: ['rowSpan'], transform: toInt },
+
     // Row-level: whether the row repeats as a header on each new page
     // when the table breaks. Presence-only — any truthy value counts.
     'data-row-header': { path: ['tableHeader'], transform: asTrue },

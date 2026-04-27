@@ -63,9 +63,14 @@ describe('attributeMap', () => {
         //   + 2 data-table-width-{size,type}
         //   + 18 data-table-borders-{6 sides}-{style,size,color}
         //         (top, bottom, left, right, insideh, insidev)
-        //   = 71 total.
+        //   = 71.
+        //
+        // Stage 2 of press-professional-docx (cell merging):
+        //   + 1 data-grid-span (column span)
+        //   + 1 data-row-span  (row span)
+        //   = 73 total.
         const keys = Object.keys(attributeMap)
-        expect(keys).toHaveLength(71)
+        expect(keys).toHaveLength(73)
     })
 
     it('does not contain data-type', () => {
