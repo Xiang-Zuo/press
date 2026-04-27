@@ -40,7 +40,8 @@
     },
     "scripts": {
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "test:invoice": "vitest run tests/integration/invoice-fixtures/build-fixtures.test.jsx --reporter verbose"
     },
     "dependencies": {
         "docx": "^9.0.0",

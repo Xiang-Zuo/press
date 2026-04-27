@@ -1,3 +1,4 @@
 node_modules/
 .claude/
 .inbox/
+tests/integration/invoice-fixtures/out/
