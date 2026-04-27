@@ -52,3 +52,8 @@ export {
 // LaTeX strings that the adapter should pass through its body-text
 // escape pass unchanged. See src/latex/raw.js for rationale.
 export { markRawLatex, RAW_BEGIN, RAW_END } from './raw.js'
+
+// LaTeX inset formatters — generic primitives that emit \cite{...} and
+// \autoref{...} commands. Foundations supply the resolved keys; press
+// supplies the emission shape + sentinel wrapping.
+export { formatCite, formatAutoref } from './insets.js'
