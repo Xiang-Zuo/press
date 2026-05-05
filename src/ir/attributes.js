@@ -76,6 +76,8 @@ export const attributeMap = {
 
     'data-spacing-before': { path: ['spacing', 'before'] },
     'data-spacing-after': { path: ['spacing', 'after'] },
+    'data-spacing-line': { path: ['spacing', 'line'] },
+    'data-spacing-line-rule': { path: ['spacing', 'lineRule'] },
 
     'data-transformation-width': { path: ['transformation', 'width'] },
     'data-transformation-height': { path: ['transformation', 'height'] },
