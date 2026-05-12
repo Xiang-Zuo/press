@@ -444,8 +444,11 @@ function irToParagraph(node) {
         options.spacing = {}
         const before = toInt(node.spacing.before)
         const after = toInt(node.spacing.after)
+        const line = toInt(node.spacing.line)
         if (before != null) options.spacing.before = before
         if (after != null) options.spacing.after = after
+        if (line != null) options.spacing.line = line
+        if (node.spacing.lineRule) options.spacing.lineRule = node.spacing.lineRule
     }
     if (node.bullet) {
         options.bullet = { level: toInt(node.bullet.level) ?? 0 }
