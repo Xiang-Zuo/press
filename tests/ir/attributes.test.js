@@ -78,9 +78,15 @@ describe('attributeMap', () => {
         //
         // Stage 6.0 (typography roles via OOXML styles):
         //   + 1 data-paragraph-style
-        //   = 82 total.
+        //   = 82.
+        //
+        // uOttawa Research Impact CV foundation:
+        //   + 1 data-bookmark              (#4 — paragraph bookmark targets
+        //                                   for in-document TOC navigation)
+        //   + 2 data-spacing-line{,-rule}  (#5 — per-paragraph line spacing)
+        //   = 85 total.
         const keys = Object.keys(attributeMap)
-        expect(keys).toHaveLength(82)
+        expect(keys).toHaveLength(85)
     })
 
     it('does not contain data-type', () => {
