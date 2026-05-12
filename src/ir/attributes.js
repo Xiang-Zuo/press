@@ -159,6 +159,14 @@ export const attributeMap = {
     // emits `<w:rStyle>`.
     'data-paragraph-style': { path: ['paragraphStyle'] },
 
+    // Paragraph bookmark target: when set, the docx adapter wraps the
+    // paragraph's inline children in a Word Bookmark with this id, so
+    // <Link href="..."> (InternalHyperlink) elsewhere in the document
+    // can jump here. The adapter already handles `node.bookmark` (see
+    // src/adapters/docx.js, irToParagraph); this entry is the missing
+    // IR attribute mapping that wires React-side props through to it.
+    'data-bookmark': { path: ['bookmark'] },
+
     'data-tab-stops': {
         path: ['tabStops'],
         transform: (v) => {
