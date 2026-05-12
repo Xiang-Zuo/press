@@ -95,6 +95,28 @@ describe('Paragraph', () => {
         })
     })
 
+    it('passes through data-spacing-line / data-spacing-line-rule attributes', () => {
+        const { ir } = renderToIR(
+            <Paragraph data-spacing-line="360" data-spacing-line-rule="auto">
+                1.5× line height
+            </Paragraph>,
+        )
+        expect(ir[0]).toMatchObject({
+            type: 'paragraph',
+            spacing: { line: '360', lineRule: 'auto' },
+        })
+    })
+
+    it('passes through the data-bookmark attribute', () => {
+        const { ir } = renderToIR(
+            <Paragraph data-bookmark="ref-section-11">Lifetime summary</Paragraph>,
+        )
+        expect(ir[0]).toMatchObject({
+            type: 'paragraph',
+            bookmark: 'ref-section-11',
+        })
+    })
+
     it('passes through data-bullet-level attribute', () => {
         const { ir } = renderToIR(
             <Paragraph data-bullet-level="0">Bullet item</Paragraph>,

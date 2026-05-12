@@ -133,6 +133,24 @@ describe('end-to-end: HTML → IR → docx buffer', () => {
         expect(buffer.length).toBeGreaterThan(0)
     })
 
+    it('forwards line spacing (data-spacing-line / data-spacing-line-rule) to OOXML', async () => {
+        const html = `
+            <p data-type="paragraph"
+               data-spacing-before="120"
+               data-spacing-line="360"
+               data-spacing-line-rule="auto">
+                Bibliography entry at 1.5× line height
+            </p>
+        `
+        const doc = await buildFromHtml(html)
+        const xml = await readDocumentXml(doc)
+        // docx renders paragraph spacing as a single <w:spacing> element
+        // carrying before/after/line/lineRule attributes.
+        expect(xml).toMatch(/<w:spacing[^>]*\bw:line="360"/)
+        expect(xml).toMatch(/<w:spacing[^>]*\bw:lineRule="auto"/)
+        expect(xml).toMatch(/<w:spacing[^>]*\bw:before="120"/)
+    })
+
     it('handles mixed content: heading + paragraph + table', async () => {
         const html = `
             <h1 data-type="paragraph" data-heading="HEADING_1">Annual Report</h1>
@@ -718,6 +736,18 @@ describe('bookmarks', () => {
         // the jump.
         expect(xml).toContain('w:anchor="ref-origin-1859"')
         expect(xml).toContain('w:name="ref-origin-1859"')
+    })
+
+    it('routes the data-bookmark attribute through to a Word bookmark', async () => {
+        // Full pipeline: data-bookmark on the element → node.bookmark via
+        // the IR attribute map → <w:bookmarkStart>/<w:bookmarkEnd> in OOXML.
+        const doc = await buildFromHtml(
+            '<p data-type="paragraph" data-bookmark="ref-section-11">Lifetime summary</p>',
+        )
+        const xml = await readDocumentXml(doc)
+        expect(xml).toContain('<w:bookmarkStart')
+        expect(xml).toContain('w:name="ref-section-11"')
+        expect(xml).toContain('<w:bookmarkEnd')
     })
 })
 
