@@ -534,8 +534,8 @@ function irToInlineChildren(node) {
             // v1 fallback: emit the LaTeX source as plain text. Better
             // than the MathML soup that was leaking before this case
             // existed (`<mo>…</mo>` operator names appearing as letters
-            // in the document). A faithful OMML emitter is tracked in
-            // kb/framework/plans/math-print-adapters.md §"Future work".
+            // in the document). A faithful OMML emitter is tracked as
+            // future work.
             return [new TextRun({ text: node.latex || '' })]
         }
         default:

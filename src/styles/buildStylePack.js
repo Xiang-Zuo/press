@@ -1,7 +1,7 @@
 /**
  * Synthesize OOXML style definitions from a Press theme.
  *
- * Stage 6.0 of kb/framework/plans/press-professional-docx.md.
+ * Stage 6.0 of the print/docx work.
  *
  * The theme.typography registry is the foundation-facing API:
  *

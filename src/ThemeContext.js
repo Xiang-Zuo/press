@@ -3,7 +3,7 @@
  * that builders should consult when foundations don't pass explicit
  * literal values.
  *
- * Stage 5 of kb/framework/plans/press-professional-docx.md.
+ * Stage 5 of the print/docx work.
  *
  * The shape is intentionally small and forgiving: a foundation passes
  * whatever subset of keys it cares about, and builders fall back to

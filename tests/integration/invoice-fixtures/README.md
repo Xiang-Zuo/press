@@ -1,7 +1,6 @@
 # invoice-fixtures
 
-Test harness and visual-review fixtures for the
-`kb/framework/plans/press-professional-docx.md` work.
+Test harness and visual-review fixtures for the professional-docx work.
 
 ## Layout
 

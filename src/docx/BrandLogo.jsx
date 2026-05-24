@@ -2,7 +2,7 @@
  * BrandLogo — a brand image suitable for page headers, cover blocks,
  * and watermarks.
  *
- * Stage 6.4 of kb/framework/plans/press-professional-docx.md.
+ * Stage 6.4 of the print/docx work.
  *
  * Emits a bare `<img data-type="image">` (no Paragraph wrapper) so
  * the IR walker keeps the image at section level — Press's docx

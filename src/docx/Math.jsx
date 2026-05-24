@@ -3,7 +3,7 @@
  * walker turns into a `math` IR node. The docx adapter's v1 fallback
  * emits the LaTeX source as plain text (better than the mathml soup
  * it was leaking before this builder existed); a faithful OMML emitter
- * is tracked in kb/framework/plans/math-print-adapters.md §"Future work".
+ * is tracked as future work.
  *
  * Inline and block math share the same builder, distinguished by the
  * `display` flag. The optional `id` flows through for parity with the

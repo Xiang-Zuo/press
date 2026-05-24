@@ -2,7 +2,7 @@
  * Page-chrome builders — page header, page footer, and page-number
  * field codes.
  *
- * Stage 4 of kb/framework/plans/press-professional-docx.md.
+ * Stage 4 of the print/docx work.
  *
  * The underlying registration plumbing already exists in Press:
  * `useDocumentOutput(block, 'docx', body, { role: 'header' })` lifts

@@ -18,7 +18,7 @@ Read the relevant doc for the task before touching code. Do not rely on memory; 
 - **`docs/ai-prompt.md`** — self-contained prompt for asking an LLM for Press JSX. Useful when pair-programming with Claude / Cursor.
 - **`README.md`** — public pitch, hello-world, pointers. Useful for checking how Press is currently presented externally.
 
-Cross-reference for legacy vocabulary: `kb/framework/reference/documents-legacy-references.md` carries the ~30 `data-*` attributes inherited verbatim from `@uniwebcms/report-sdk`. Do not redesign the vocabulary without good reason — foundation porting from the legacy SDK depends on exact names.
+The ~30 `data-*` attributes are inherited verbatim from `@uniwebcms/report-sdk`. Do not redesign the vocabulary without good reason — foundation porting from the legacy SDK depends on exact names.
 
 ## No build step
 

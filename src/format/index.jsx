@@ -1,7 +1,7 @@
 /**
  * @uniweb/press/format — locale-aware text formatters.
  *
- * Stage 6.1 of kb/framework/plans/press-professional-docx.md.
+ * Stage 6.1 of the print/docx work.
  *
  * The same JSX feeds the React preview and the docx fragment, so
  * these are React components that emit <span data-type="text"> and
