@@ -14,7 +14,7 @@
  * Each test resets the module graph via vi.resetModules so the private
  * per-key guard Set starts empty.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import React from 'react'
 
 async function freshImports() {
@@ -34,6 +34,12 @@ describe('empty-registrations warning', () => {
     let warnSpy
     beforeEach(() => {
         warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+    afterEach(() => {
+        // Restore console.warn so each test starts with a fresh spy. Without
+        // this, vitest v4's spyOn accumulates call history across tests when
+        // the same property is re-spied, inflating the call counts.
+        vi.restoreAllMocks()
     })
 
     it('warns with the input-shape key, not just the format, when format aliases a key', async () => {
