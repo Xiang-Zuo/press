@@ -8,7 +8,7 @@ Ten minutes from `npm install` to a working Download button. The examples assume
 npm install @uniweb/press
 ```
 
-Press has a React peer dependency (18 or 19). It does not install `docx`, `exceljs`, or the Typst runtime for you — each format's heavy library is declared as a dependency of Press and loaded dynamically the first time you call `compile(format)`. A foundation that never calls `compile('docx')` never pays for the `docx` library.
+Press has a React peer dependency (19). It does not install `docx`, `exceljs`, or the Typst runtime for you — each format's heavy library is declared as a dependency of Press and loaded dynamically the first time you call `compile(format)`. A foundation that never calls `compile('docx')` never pays for the `docx` library.
 
 ## Write a section
 

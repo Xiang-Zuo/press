@@ -140,7 +140,7 @@ Diagnosing future Word-repair complaints: unzip the generated file, have the use
 - `docx` — Word document generation (dynamically imported via `src/adapters/docx.js`, not in the main bundle)
 - `exceljs` — spreadsheet generation (dynamically imported)
 - `jszip` — source-bundle packaging for typst `sources` mode
-- React 18/19 as peer dependency
+- React 19 as peer dependency
 
 ## Testing
 

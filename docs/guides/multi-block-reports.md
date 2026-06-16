@@ -101,7 +101,7 @@ register(blockA, 'docx', markup3)  // blockOrder: [blockA, blockB] — A stays f
 Two consequences:
 
 - **Content updates are cheap.** A section whose content changes re-renders, re-registers its new markup, and the new markup replaces the old at the same position. No reordering, no duplicates.
-- **Strict Mode is safe.** React 18/19 Strict Mode intentionally double-invokes every render in development. The second call overwrites the first with identical content. The final store state is the same as a single render would have produced.
+- **Strict Mode is safe.** React Strict Mode intentionally double-invokes every render in development. The second call overwrites the first with identical content. The final store state is the same as a single render would have produced.
 
 ## Unmount and remount
 
