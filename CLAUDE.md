@@ -163,6 +163,8 @@ Tests use `@testing-library/react` with the `jsdom` Vitest environment. The comp
 3. If the component introduces new data-attribute keys, extend `src/ir/attributes.js`'s `attributeMap` so the IR layer picks them up.
 4. Add component tests in `tests/<format>/components.test.jsx` (render to static HTML, parse to IR, assert the IR shape) and an end-to-end case in `tests/integration/enriched-components.test.jsx`.
 
+> **`attributeMap` canary.** `tests/ir/attributes.test.js` asserts `Object.keys(attributeMap)` has an *exact* count, with a ledger comment of where each entry came from. Adding any `data-*` entry to `src/ir/attributes.js` requires bumping that count and extending the ledger **in the same change** — it's deliberate, forcing a conscious review whenever the inherited attribute vocabulary changes. A PR that adds attributes without it fails CI on the count mismatch (expected — update the count + ledger, don't treat the PR as wrong). So before merging any PR that touches `attributes.js`, check out the branch and run `pnpm test` rather than trusting a green run against `main`.
+
 ### Adding a format adapter
 
 See `docs/architecture/adding-a-format.md` for the checklist, worked examples (LaTeX, Paged.js), and the three canonical adapter shapes. The short version:
