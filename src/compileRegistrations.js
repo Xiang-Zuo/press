@@ -276,6 +276,11 @@ export async function compileDocument(treeOrWebsite, options = {}) {
         : {}
 
     const mergedAdapterOptions = {
+        // Thread the host loadAsset through to the adapter so it can embed
+        // inline body images (the typst/latex bundlers fetch bytes here, the
+        // same capability the docx adapter uses). A foundation's getOptions or
+        // the caller can still override it via adapterOptions.
+        loadAsset,
         ...foundationAdapterOptions.adapterOptions,
         ...overrideAdapterOptions,
     }
