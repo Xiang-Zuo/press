@@ -47,6 +47,7 @@
  */
 
 import JSZip from 'jszip'
+import { bundleInlineImages } from '../assets/inline-images.js'
 import { RAW_BEGIN, RAW_END, markRawLatex } from '../latex/raw.js'
 
 // Re-export so consumers reaching the adapter via the dynamic-import
@@ -84,9 +85,18 @@ export { markRawLatex }
  * @returns {Promise<Blob>}
  */
 export async function compileLatex(input, options = {}) {
-    const { mode = 'sources', ...rest } = options
+    const { mode = 'sources', loadAsset, ...rest } = options
 
-    const bundle = buildBundle(input, rest)
+    // Fetch inline body images and rewrite their IR src to a bundle-local
+    // assets/<hash>.<ext> path, then merge the bytes into the bundle so
+    // latexmk/pdflatex resolves \includegraphics{...} against the extracted
+    // sources. Cover art arrives pre-bundled in rest.assets via the
+    // foundation's getOptions; this handles document-body images.
+    const inlineImageAssets = await bundleInlineImages(input, loadAsset)
+    const bundle = buildBundle(input, {
+        ...rest,
+        assets: { ...(rest.assets || {}), ...inlineImageAssets },
+    })
 
     if (mode === 'sources') {
         return zipBundle(bundle)

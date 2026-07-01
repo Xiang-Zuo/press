@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
+import JSZip from 'jszip'
 import { htmlToIR } from '../../src/ir/parser.js'
 import { buildBundle, compileLatex } from '../../src/adapters/latex.js'
 import {
@@ -135,6 +136,45 @@ describe('latex adapter: IR → LaTeX source', () => {
         expect(withCaption).toContain('\\includegraphics[width=400pt]{/photo.jpg}')
         expect(withCaption).toContain('\\caption{A photo}')
         expect(withCaption).toContain('\\end{figure}')
+    })
+
+    it('fetches inline body images via loadAsset and rewrites the path to assets/<hash>.<ext>', async () => {
+        const ir = htmlToIR(
+            ReactDOMServer.renderToStaticMarkup(<Image src="mitosis.png" />),
+        )
+        // Minimal valid PNG header so detectMime picks image/png.
+        const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4])
+        const loadAsset = async (src) => (src === 'mitosis.png' ? pngBytes : null)
+
+        const blob = await compileLatex(
+            { sections: [ir], metadata: null },
+            { mode: 'sources', loadAsset },
+        )
+        const zip = await JSZip.loadAsync(blob)
+
+        const assetPaths = Object.keys(zip.files).filter(
+            (p) => p.startsWith('assets/') && !zip.files[p].dir,
+        )
+        expect(assetPaths).toHaveLength(1)
+        expect(assetPaths[0]).toMatch(/^assets\/[0-9a-f]+\.png$/)
+
+        const contentTex = await zip.file('content.tex').async('string')
+        expect(contentTex).toContain(`\\includegraphics{${assetPaths[0]}}`)
+        expect(contentTex).not.toContain('\\includegraphics{mitosis.png}')
+    })
+
+    it('leaves the image path untouched when no bytes can be loaded', async () => {
+        const ir = htmlToIR(
+            ReactDOMServer.renderToStaticMarkup(<Image src="mitosis.png" />),
+        )
+        const blob = await compileLatex({ sections: [ir], metadata: null }, { mode: 'sources' })
+        const zip = await JSZip.loadAsync(blob)
+
+        expect(
+            Object.keys(zip.files).filter((p) => p.startsWith('assets/') && !zip.files[p].dir),
+        ).toHaveLength(0)
+        const contentTex = await zip.file('content.tex').async('string')
+        expect(contentTex).toContain('\\includegraphics{mitosis.png}')
     })
 
     it('emits table via tabular', () => {
