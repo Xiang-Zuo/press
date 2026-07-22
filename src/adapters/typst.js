@@ -374,6 +374,7 @@ function blockNodeToTypst(node) {
             return inlineNodeToTypst(node)
 
         case 'link':
+        case 'a':
             return inlineNodeToTypst(node)
 
         case 'math':
@@ -526,7 +527,7 @@ function inlineNodeToTypst(node) {
         return text
     }
 
-    if (node.type === 'link') {
+    if (node.type === 'link' || node.type === 'a') {
         const href = node.href || ''
         const inner = inlineChildrenToTypst(node.children || [])
         return `#link(${quoteTypstString(href)})[${inner}]`

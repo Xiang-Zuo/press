@@ -510,6 +510,9 @@ function irToInlineChildren(node) {
             // a TextRun so the OOXML parent is <w:r>.
             return [new TextRun({ children: [new DocxTab()] })]
         case 'externalHyperlink':
+        // A plain <a href> from same-source JSX — same destination, same
+        // emitter. See the href note in ir/parser.js.
+        case 'a':
             return [irToExternalHyperlink(node)]
         case 'internalHyperlink':
             return [irToInternalHyperlink(node)]
@@ -612,10 +615,13 @@ function irToTextRunPair(node) {
 }
 
 function irToExternalHyperlink(node) {
+    // `link` is the data-* spelling (data-link); `href` arrives from a plain
+    // <a href>. Same destination either way.
+    const destination = node.link || node.href || ''
     const children = (node.children || []).flatMap(irToInlineChildren)
     return new ExternalHyperlink({
-        children: children.length ? children : [new TextRun({ text: node.link || '' })],
-        link: node.link || '',
+        children: children.length ? children : [new TextRun({ text: destination })],
+        link: destination,
     })
 }
 

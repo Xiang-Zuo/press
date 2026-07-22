@@ -103,6 +103,22 @@ function nodeToIR(node) {
     const properties = attributesToProperties(node.attrs || [])
     const children = collectChildren(node)
 
+    // A plain <a href> carries its destination in a normal HTML attribute, not
+    // a data-* one, so attributesToProperties drops it. Foundations reach this
+    // shape by writing an ordinary anchor in JSX that serves both the browser
+    // preview and the compile input — the same-source property principles.md
+    // §8 asks us to pursue. Without the href the adapters still emit the link
+    // TEXT and silently lose the destination, which is precisely the
+    // preview/output drift that principle exists to eliminate.
+    //
+    // Only `href` is lifted, and only for an anchor: it is the one plain
+    // attribute whose document meaning is unambiguous. The IR stays data-*
+    // driven everywhere else.
+    if (type === 'a' && properties.href === undefined) {
+        const href = getAttr(node, 'href')
+        if (href) properties.href = href
+    }
+
     const obj = { type, ...properties }
 
     if (type === 'text') {
