@@ -32,7 +32,19 @@ describe('pagedjs adapter: emitDocument', () => {
 
     it('embeds the default stylesheet when no stylesheet option is given', () => {
         const doc = emitDocument({ body: '' })
-        expect(doc).toContain('<style>' + DEFAULT_STYLESHEET)
+        expect(doc).toContain(DEFAULT_STYLESHEET)
+    })
+
+    it('emits the math CSS even when a foundation replaces the stylesheet', () => {
+        // A custom stylesheet REPLACES the default, so while the math rules
+        // lived inside DEFAULT_STYLESHEET, customizing the design silently
+        // broke the maths -- a pmatrix's rows touching, an aligned
+        // environment's = signs drifting, with nothing to point at.
+        const doc = emitDocument({ body: '', stylesheet: '.mine { color: red; }' })
+        expect(doc).toContain('tml-jot')
+        expect(doc).toContain('.mine { color: red; }')
+        // ...and the foundation's sheet comes last, so it can still override.
+        expect(doc.indexOf('tml-jot')).toBeLessThan(doc.indexOf('.mine'))
     })
 
     it('embeds a foundation-supplied stylesheet verbatim', () => {

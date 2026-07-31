@@ -131,7 +131,14 @@ async function compileServerSide(htmlDoc, options = {}) {
 export function emitDocument({ body = '', meta = {}, stylesheet, polyfillUrl } = {}) {
     const lang = meta.language ?? 'en'
     const title = meta.title ?? 'Book'
-    const css = stylesheet || DEFAULT_STYLESHEET
+    // Math CSS is emitted ahead of the design stylesheet, not inside it.
+    // Temml's MathML needs these rules to lay out at all -- without them a
+    // pmatrix's rows touch and an aligned environment's = signs drift -- and a
+    // foundation that supplies its own `stylesheet` REPLACES the default, so
+    // folding them into DEFAULT_STYLESHEET meant customizing the design
+    // silently broke the maths. Emitting first also leaves the foundation's
+    // sheet able to override any of it.
+    const css = `${MATH_CSS}\n${stylesheet || DEFAULT_STYLESHEET}`
     const polyfill = polyfillUrl || DEFAULT_POLYFILL_URL
 
     return `<!doctype html>
@@ -294,5 +301,4 @@ blockquote {
 }
 ul, ol { margin: 0.5em 0 0.75em 1.5em; }
 figure { break-inside: avoid; }
-${MATH_CSS}
 `

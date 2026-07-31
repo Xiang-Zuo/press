@@ -63,7 +63,14 @@ export async function compileEpub(input, options = {}) {
     const { meta = {}, stylesheet, identifier, cover, loadAsset } = options
 
     const resolvedMeta = { ...(metadata || {}), ...meta }
-    const css = stylesheet || DEFAULT_STYLESHEET
+    // Math CSS is emitted ahead of the design stylesheet, not inside it.
+    // Temml's MathML needs these rules to lay out at all -- without them a
+    // pmatrix's rows touch and an aligned environment's = signs drift -- and a
+    // foundation that supplies its own `stylesheet` REPLACES the default, so
+    // folding them into DEFAULT_STYLESHEET meant customizing the design
+    // silently broke the maths. Emitting first also leaves the foundation's
+    // sheet able to override any of it.
+    const css = `${MATH_CSS}\n${stylesheet || DEFAULT_STYLESHEET}`
     const id = identifier || resolvedMeta.identifier || generateUuid()
     const coverUrl = cover || resolvedMeta.cover || resolvedMeta.coverImage
 
@@ -626,5 +633,4 @@ pre {
   overflow: auto;
   white-space: pre-wrap;
 }
-${MATH_CSS}
 `

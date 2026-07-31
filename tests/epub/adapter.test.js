@@ -460,7 +460,25 @@ describe('compileEpub — metadata', () => {
         )
         const zip = await blobToZip(blob)
         const css = await zip.file('OEBPS/styles.css').async('string')
-        expect(css).toBe('.special { color: red; }')
+        // Verbatim, and last, so it can override — but no longer the WHOLE
+        // file: the math base layer is emitted ahead of it.
+        expect(css).toContain('.special { color: red; }')
+        expect(css.endsWith('.special { color: red; }')).toBe(true)
+    })
+
+    it('keeps the math CSS when a foundation replaces the stylesheet', async () => {
+        // The math rules used to live inside DEFAULT_STYLESHEET, which a
+        // custom stylesheet replaces wholesale -- so styling an EPUB silently
+        // cost you MathML layout.
+        const blob = await compileEpub(
+            { sections: ['<h1>A</h1>'], metadata: { title: 'T', language: 'en' } },
+            { identifier: 'x', stylesheet: '.special { color: red; }' },
+        )
+        const zip = await blobToZip(blob)
+        const css = await zip.file('OEBPS/styles.css').async('string')
+        expect(css).toContain('tml-jot')
+        expect(css).toContain('.special { color: red; }')
+        expect(css.indexOf('tml-jot')).toBeLessThan(css.indexOf('.special'))
     })
 })
 
