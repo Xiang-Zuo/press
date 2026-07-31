@@ -42,4 +42,16 @@ export const MATH_CSS = `/* Temml's own class hooks — without these an aligned
 /* Row spacing. The browser gives mtd no vertical padding, so state the
    MathML-Core default here; Temml's own CSS only adjusts it for jot. */
 math mtd { padding-top: 0.5ex; padding-bottom: 0.5ex; }
-math mtable.tml-jot mtd { padding-top: 0.7ex; padding-bottom: 0.7ex; }`
+math mtable.tml-jot mtd { padding-top: 0.7ex; padding-bottom: 0.7ex; }
+/* AMS auto-numbering. Which equations number is the AUTHOR's choice, made in
+   LaTeX: align and equation number, aligned and the starred forms do not.
+   Without these two rules that choice was discarded -- align and align-star
+   rendered identically, so an author who asked for numbers silently got none.
+   (No backticks in here: this string is a JS template literal.) */
+.tml-eqn::before {
+  counter-increment: tmlEqnNo;
+  content: "(" counter(tmlEqnNo) ")";
+}
+body {
+  counter-reset: tmlEqnNo;
+}`
