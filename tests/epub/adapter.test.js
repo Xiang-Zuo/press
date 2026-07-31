@@ -539,3 +539,29 @@ describe('serializeXhtml — direct unit tests', () => {
         expect(out).toContain('<p>')
     })
 })
+
+describe('compileEpub — equation numbering', () => {
+    it('numbers straight through the book rather than restarting per chapter', async () => {
+        // A reader meets "Equation 4" in chapter three; restarting per chapter
+        // would give them a second "(1)" instead. And it is written as text
+        // because EPUB reader support for CSS counters is not knowable.
+        const TAG = '<span class="tml-eqn"></span>'
+        const blob = await compileEpub(
+            {
+                sections: [`<h1>One</h1>${TAG}`, `<h1>Two</h1>${TAG}${TAG}`],
+                metadata: { title: 'T', language: 'en' },
+            },
+            { identifier: 'x' },
+        )
+        const zip = await blobToZip(blob)
+        const names = Object.keys(zip.files).filter((n) => n.endsWith('.xhtml'))
+        const all = (
+            await Promise.all(names.map((n) => zip.file(n).async('string')))
+        ).join('\n')
+
+        expect(all).toContain('>(1)<')
+        expect(all).toContain('>(2)<')
+        expect(all).toContain('>(3)<')
+        expect(all).not.toContain('<span class="tml-eqn"></span>')
+    })
+})

@@ -43,12 +43,21 @@ export const MATH_CSS = `/* Temml's own class hooks — without these an aligned
    MathML-Core default here; Temml's own CSS only adjusts it for jot. */
 math mtd { padding-top: 0.5ex; padding-bottom: 0.5ex; }
 math mtable.tml-jot mtd { padding-top: 0.7ex; padding-bottom: 0.7ex; }
-/* AMS auto-numbering. Which equations number is the AUTHOR's choice, made in
+/* AMS auto-numbering, for lanes that keep our CSS counter.
+
+   Scoped to :empty because the document lanes cannot rely on it -- Paged.js
+   rewrites counters for its own pagination and strips counter-increment, so
+   every equation rendered as "(0)" (measured 2026-07-31; the declaration
+   survives intact without the polyfill). press therefore writes the numbers
+   into the spans as text, and a span carrying a number is no longer :empty, so
+   the two can never both fire.
+
+   AMS auto-numbering. Which equations number is the AUTHOR's choice, made in
    LaTeX: align and equation number, aligned and the starred forms do not.
    Without these two rules that choice was discarded -- align and align-star
    rendered identically, so an author who asked for numbers silently got none.
    (No backticks in here: this string is a JS template literal.) */
-.tml-eqn::before {
+.tml-eqn:empty::before {
   counter-increment: tmlEqnNo;
   content: "(" counter(tmlEqnNo) ")";
 }
@@ -74,3 +83,35 @@ math.tml-display:has(.tml-eqn) {
   display: block !important;
   width: 100%;
 }`
+
+/**
+ * Write equation numbers into Temml's tag spans as text.
+ *
+ * Temml leaves `<span class="tml-eqn"></span>` empty and expects a CSS counter
+ * to draw the number. That works in a browser and not in a document: Paged.js
+ * rewrites counters for its own pagination and strips `counter-increment`, so
+ * every equation renders as "(0)" -- measured, and confirmed by the declaration
+ * surviving intact once the polyfill is removed. EPUB readers vary at least as
+ * widely, and neither lane offers a way to find out.
+ *
+ * So the document lanes stop asking CSS to count. A span that carries its
+ * number is no longer `:empty`, and the stylesheet's counter rule is scoped to
+ * `:empty`, so the two can never both fire and double up.
+ *
+ * A regex rather than a parse: Temml emits this span in exactly one shape, and
+ * the epub adapter would otherwise have to thread a counter through its parse5
+ * tree for no gain.
+ *
+ * @param {string} html
+ * @param {number} [start=1] - First number to use; lets a caller continue the
+ *   sequence across sections so a book numbers straight through.
+ * @returns {{ html: string, next: number }}
+ */
+export function numberEquations(html, start = 1) {
+  let n = start
+  const out = String(html ?? '').replace(
+    /<span class="tml-eqn"><\/span>/g,
+    () => `<span class="tml-eqn">(${n++})</span>`,
+  )
+  return { html: out, next: n }
+}

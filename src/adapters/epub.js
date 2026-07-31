@@ -31,7 +31,7 @@
 import JSZip from 'jszip'
 import { parseFragment } from 'parse5'
 import { fetchAssets } from '../assets/fetch.js'
-import { MATH_CSS } from './math-css.js'
+import { MATH_CSS, numberEquations } from './math-css.js'
 
 // ============================================================================
 // Public API
@@ -77,7 +77,16 @@ export async function compileEpub(input, options = {}) {
     // Walk each HTML fragment, collect image URLs, capture a chapter title.
     // The parsed tree is kept so we can re-serialize as XHTML after
     // rewriting <img src> to manifest-relative paths.
-    const chapters = sections.map((html, i) => buildChapter(html, i))
+    // Numbered straight through the book rather than restarting per chapter,
+    // and as text rather than a CSS counter — reader support for counters is
+    // not something an EPUB can find out.
+    let eqnNo = 1
+    const numbered = sections.map((html) => {
+        const result = numberEquations(html, eqnNo)
+        eqnNo = result.next
+        return result.html
+    })
+    const chapters = numbered.map((html, i) => buildChapter(html, i))
 
     // Deduplicate image URLs across all chapters — and the cover, if any —
     // and fetch them in parallel. Failed fetches are logged and the original

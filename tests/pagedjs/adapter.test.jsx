@@ -300,3 +300,39 @@ describe('pagedjs adapter: compilePagedjs (server mode)', () => {
         }
     })
 })
+
+describe('equation numbering in a document', () => {
+    /**
+     * Temml leaves the tag span empty and expects a CSS counter to draw the
+     * number. Paged.js rewrites counters for its own pagination and strips
+     * `counter-increment`, so every equation rendered as "(0)" — caught by
+     * looking at a compiled document, after three structural checks had all
+     * passed. The number is written in as text now, and the stylesheet's
+     * counter rule is scoped to `:empty` so the two can never both fire.
+     */
+    const TAG = '<span class="tml-eqn"></span>'
+
+    it('writes the number into the tag span', () => {
+        const doc = emitDocument({ body: `<p>a</p>${TAG}` })
+        expect(doc).toContain('<span class="tml-eqn">(1)</span>')
+        expect(doc).not.toContain(TAG)
+    })
+
+    it('numbers several equations in document order', () => {
+        const doc = emitDocument({ body: `${TAG}<p>x</p>${TAG}<p>y</p>${TAG}` })
+        expect(doc).toContain('>(1)<')
+        expect(doc).toContain('>(2)<')
+        expect(doc).toContain('>(3)<')
+    })
+
+    it('scopes the CSS counter to an empty span, so nothing double-numbers', () => {
+        const doc = emitDocument({ body: TAG })
+        expect(doc).toContain('.tml-eqn:empty::before')
+        expect(doc).not.toMatch(/\.tml-eqn::before/)
+    })
+
+    it('leaves a document with no equations untouched', () => {
+        const doc = emitDocument({ body: '<p>no maths here</p>' })
+        expect(doc).toContain('<p>no maths here</p>')
+    })
+})

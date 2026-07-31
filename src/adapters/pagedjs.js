@@ -129,6 +129,11 @@ async function compileServerSide(htmlDoc, options = {}) {
  * want to inspect the emitted document before handing it to a browser.
  */
 export function emitDocument({ body = '', meta = {}, stylesheet, polyfillUrl } = {}) {
+    // Equation numbers are written in as text rather than left to the CSS
+    // counter: Paged.js strips counter-increment while rewriting counters for
+    // its own pagination, which rendered every equation as "(0)".
+    body = numberEquations(body).html
+
     const lang = meta.language ?? 'en'
     const title = meta.title ?? 'Book'
     // Math CSS is emitted ahead of the design stylesheet, not inside it.
@@ -238,7 +243,7 @@ export const DEFAULT_POLYFILL_URL =
  * book PDF without a custom foundation stylesheet. Foundations override by
  * passing `options.stylesheet`.
  */
-import { MATH_CSS } from './math-css.js'
+import { MATH_CSS, numberEquations } from './math-css.js'
 
 export const DEFAULT_STYLESHEET = `
 /* Hidden metadata block — the DOM carries it for CSS string-set / string() */
