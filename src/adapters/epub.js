@@ -31,6 +31,7 @@
 import JSZip from 'jszip'
 import { parseFragment } from 'parse5'
 import { fetchAssets } from '../assets/fetch.js'
+import { MATH_CSS } from './math-css.js'
 
 // ============================================================================
 // Public API
@@ -625,4 +626,5 @@ pre {
   overflow: auto;
   white-space: pre-wrap;
 }
+${MATH_CSS}
 `

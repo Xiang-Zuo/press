@@ -231,6 +231,8 @@ export const DEFAULT_POLYFILL_URL =
  * book PDF without a custom foundation stylesheet. Foundations override by
  * passing `options.stylesheet`.
  */
+import { MATH_CSS } from './math-css.js'
+
 export const DEFAULT_STYLESHEET = `
 /* Hidden metadata block — the DOM carries it for CSS string-set / string() */
 [data-pagedjs-metadata] { display: none; }
@@ -292,4 +294,5 @@ blockquote {
 }
 ul, ol { margin: 0.5em 0 0.75em 1.5em; }
 figure { break-inside: avoid; }
+${MATH_CSS}
 `
